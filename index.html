@@ -13,6 +13,7 @@
       --muted: #68707a;
       --accent: #2d6a4f;
       --accent-soft: #eaf5ef;
+      --danger: #a12626;
     }
 
     * { box-sizing: border-box; }
@@ -55,7 +56,7 @@
 
     .controls {
       display: grid;
-      grid-template-columns: 1fr 180px 130px;
+      grid-template-columns: 1fr 180px 150px;
       gap: 12px;
       padding: 16px 20px;
       border-bottom: 1px solid var(--line);
@@ -71,6 +72,7 @@
 
     .field input,
     .field select,
+    .modal input,
     button {
       width: 100%;
       padding: 10px 12px;
@@ -90,11 +92,28 @@
 
     button:hover { filter: brightness(.96); }
 
+    .btn-secondary {
+      background: #fff;
+      color: var(--text);
+      border-color: #cfd5db;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      border-color: var(--danger);
+      color: #fff;
+    }
+
     .status {
       padding: 12px 20px 0;
       min-height: 32px;
       font-size: 14px;
       color: var(--muted);
+    }
+
+    .error {
+      color: var(--danger);
+      font-weight: 600;
     }
 
     .board-meta {
@@ -134,6 +153,11 @@
       min-height: 48px;
       padding: 10px 14px;
       border-bottom: 1px solid var(--line);
+      cursor: pointer;
+    }
+
+    .slot:hover {
+      background: #fafcfa;
     }
 
     .slot:last-child { border-bottom: none; }
@@ -155,9 +179,62 @@
       font-style: italic;
     }
 
-    .error {
-      color: #a12626;
-      font-weight: 600;
+    .helper {
+      padding: 0 20px 18px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.35);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 1000;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal {
+      width: 100%;
+      max-width: 460px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.2);
+      border: 1px solid var(--line);
+      overflow: hidden;
+    }
+
+    .modal-header {
+      padding: 16px 18px 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .modal-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 0 0 4px;
+    }
+
+    .modal-sub {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .modal-body {
+      padding: 16px 18px;
+    }
+
+    .modal-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      padding: 0 18px 18px;
     }
 
     @media (max-width: 900px) {
@@ -167,7 +244,10 @@
 
     @media (max-width: 640px) {
       .grid,
-      .controls { grid-template-columns: 1fr; }
+      .controls,
+      .modal-actions {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -176,7 +256,7 @@
     <div class="panel">
       <div class="header">
         <h1>Orchard Assignments</h1>
-        <div class="sub">Supabase-backed assignment board using the <strong>assignment_grid_rows</strong> view.</div>
+        <div class="sub">Click any slot to add, change, or remove a name.</div>
       </div>
 
       <div class="controls">
@@ -201,6 +281,7 @@
 
       <div id="status" class="status"></div>
       <div id="boardMeta" class="board-meta"></div>
+      <div class="helper">Tap or click a slot to edit it.</div>
 
       <div class="grid">
         <div class="column">
@@ -223,10 +304,33 @@
     </div>
   </div>
 
+  <div id="modalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <div id="modalTitle" class="modal-title">Edit Assignment</div>
+        <div id="modalSub" class="modal-sub"></div>
+      </div>
+      <div class="modal-body">
+        <div class="field">
+          <label for="nameInput">Volunteer Name</label>
+          <input id="nameInput" type="text" placeholder="Enter full name" />
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button id="saveBtn" type="button">Save</button>
+        <button id="clearBtn" type="button" class="btn-danger">Remove</button>
+        <button id="cancelBtn" type="button" class="btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const SUPABASE_URL = 'https://tfkdkekvtuqepjqsgjoc.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_JRFxF6A8mDcZX2D05CdoCQ_F6_rDbwh';
+
+    const READ_SOURCE = 'assignment_grid_rows';
+    const WRITE_TABLE = 'assignments';
 
     const ROLE_ORDER = ['check_in', 'parking', 'greeter', 'transport'];
     const ROLE_LABELS = {
@@ -249,31 +353,62 @@
     const shiftCodeEl = document.getElementById('shiftCode');
     const loadBtn = document.getElementById('loadBtn');
 
+    const modalBackdrop = document.getElementById('modalBackdrop');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalSub = document.getElementById('modalSub');
+    const nameInput = document.getElementById('nameInput');
+    const saveBtn = document.getElementById('saveBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let currentRows = [];
+    let activeSlot = null;
+
     function setStatus(message, isError = false) {
       statusEl.textContent = message;
       statusEl.className = isError ? 'status error' : 'status';
+    }
+
+    function getBoardContext() {
+      return {
+        service_date: serviceDateEl.value,
+        shift_code: shiftCodeEl.value
+      };
     }
 
     function emptyBoard() {
       ROLE_ORDER.forEach(role => {
         roleContainers[role].innerHTML = '';
         for (let slot = 1; slot <= 8; slot += 1) {
-          const row = document.createElement('div');
-          row.className = 'slot';
-          row.innerHTML = `
-            <div class="slot-num">${slot}</div>
-            <div class="slot-name empty">Open</div>
-          `;
-          roleContainers[role].appendChild(row);
+          const rowEl = buildSlotElement(role, slot, null);
+          roleContainers[role].appendChild(rowEl);
         }
       });
     }
 
+    function buildSlotElement(role, slot, row) {
+      const rowEl = document.createElement('div');
+      rowEl.className = 'slot';
+
+      const name = row?.full_name || 'Open';
+      const isEmpty = !row;
+
+      rowEl.innerHTML = `
+        <div class="slot-num">${slot}</div>
+        <div class="slot-name ${isEmpty ? 'empty' : ''}">${name}</div>
+      `;
+
+      rowEl.addEventListener('click', () => openEditor(role, slot, row));
+      return rowEl;
+    }
+
     function renderBoard(rows, serviceDate, shiftCode) {
-      emptyBoard();
+      currentRows = rows || [];
 
       const byRoleAndSlot = new Map();
-      rows.forEach(row => {
+      currentRows.forEach(row => {
         byRoleAndSlot.set(`${row.assignment_role}:${row.assignment_slot}`, row);
       });
 
@@ -283,33 +418,52 @@
 
         for (let slot = 1; slot <= 8; slot += 1) {
           const key = `${role}:${slot}`;
-          const match = byRoleAndSlot.get(key);
-          const name = match?.full_name || 'Open';
-          const isEmpty = !match;
-
-          const row = document.createElement('div');
-          row.className = 'slot';
-          row.innerHTML = `
-            <div class="slot-num">${slot}</div>
-            <div class="slot-name ${isEmpty ? 'empty' : ''}">${name}</div>
-          `;
-          container.appendChild(row);
+          const match = byRoleAndSlot.get(key) || null;
+          container.appendChild(buildSlotElement(role, slot, match));
         }
       });
 
       boardMetaEl.textContent = `${serviceDate} • ${shiftCode}`;
     }
 
-    async function loadAssignments() {
-      const serviceDate = serviceDateEl.value;
-      const shiftCode = shiftCodeEl.value;
+    function openEditor(role, slot, row) {
+      const { service_date, shift_code } = getBoardContext();
 
-      if (!serviceDate) {
+      if (!service_date) {
         setStatus('Choose a service date first.', true);
         return;
       }
 
-      if (SUPABASE_URL === 'YOUR_SUPABASE_URL' || SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY') {
+      activeSlot = {
+        role,
+        slot,
+        row
+      };
+
+      modalTitle.textContent = `${ROLE_LABELS[role]} — Slot ${slot}`;
+      modalSub.textContent = `${service_date} • ${shift_code}`;
+      nameInput.value = row?.full_name || '';
+      modalBackdrop.classList.add('open');
+      setTimeout(() => nameInput.focus(), 10);
+    }
+
+    function closeEditor() {
+      modalBackdrop.classList.remove('open');
+      activeSlot = null;
+    }
+
+    async function loadAssignments() {
+      const { service_date, shift_code } = getBoardContext();
+
+      if (!service_date) {
+        setStatus('Choose a service date first.', true);
+        return;
+      }
+
+      if (
+        SUPABASE_URL === 'YOUR_SUPABASE_URL' ||
+        SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY'
+      ) {
         setStatus('Add your Supabase URL and anon key in the script first.', true);
         return;
       }
@@ -318,19 +472,17 @@
       boardMetaEl.textContent = '';
 
       try {
-        const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
         const { data, error } = await client
-          .from('assignment_grid_rows')
+          .from(READ_SOURCE)
           .select('assignment_id,service_date,shift_code,shift_label,assignment_role,assignment_slot,full_name,status')
-          .eq('service_date', serviceDate)
-          .eq('shift_code', shiftCode)
+          .eq('service_date', service_date)
+          .eq('shift_code', shift_code)
           .order('assignment_role', { ascending: true })
           .order('assignment_slot', { ascending: true });
 
         if (error) throw error;
 
-        renderBoard(data || [], serviceDate, shiftCode);
+        renderBoard(data || [], service_date, shift_code);
         setStatus(`${(data || []).length} assignment row(s) loaded.`);
       } catch (err) {
         console.error(err);
@@ -339,7 +491,81 @@
       }
     }
 
+    async function saveAssignment() {
+      if (!activeSlot) return;
+
+      const fullName = nameInput.value.trim();
+      const { service_date, shift_code } = getBoardContext();
+
+      if (!fullName) {
+        setStatus('Enter a name or use Remove.', true);
+        return;
+      }
+
+      setStatus('Saving...');
+
+      try {
+        const payload = {
+          service_date,
+          shift_code,
+          assignment_role: activeSlot.role,
+          assignment_slot: activeSlot.slot,
+          full_name: fullName
+        };
+
+        const { error } = await client
+          .from(WRITE_TABLE)
+          .upsert(payload, {
+            onConflict: 'service_date,shift_code,assignment_role,assignment_slot'
+          });
+
+        if (error) throw error;
+
+        closeEditor();
+        await loadAssignments();
+        setStatus(`Saved ${fullName}.`);
+      } catch (err) {
+        console.error(err);
+        setStatus(`Save failed: ${err.message}`, true);
+      }
+    }
+
+    async function removeAssignment() {
+      if (!activeSlot) return;
+
+      const { service_date, shift_code } = getBoardContext();
+
+      setStatus('Removing...');
+
+      try {
+        const { error } = await client
+          .from(WRITE_TABLE)
+          .delete()
+          .eq('service_date', service_date)
+          .eq('shift_code', shift_code)
+          .eq('assignment_role', activeSlot.role)
+          .eq('assignment_slot', activeSlot.slot);
+
+        if (error) throw error;
+
+        closeEditor();
+        await loadAssignments();
+        setStatus(`Assignment removed.`);
+      } catch (err) {
+        console.error(err);
+        setStatus(`Remove failed: ${err.message}`, true);
+      }
+    }
+
     loadBtn.addEventListener('click', loadAssignments);
+    saveBtn.addEventListener('click', saveAssignment);
+    clearBtn.addEventListener('click', removeAssignment);
+    cancelBtn.addEventListener('click', closeEditor);
+
+    modalBackdrop.addEventListener('click', (e) => {
+      if (e.target === modalBackdrop) closeEditor();
+    });
+
     emptyBoard();
     loadAssignments();
   </script>
