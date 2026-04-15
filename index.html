@@ -3,554 +3,372 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Wednesday PM Volunteer Signup Board</title>
+  <title>Orchard Assignments</title>
   <style>
     :root {
-      --bg: #f8fafc;
+      --bg: #f7f7f8;
       --card: #ffffff;
-      --border: #dbe3ea;
-      --text: #0f172a;
-      --muted: #475569;
-      --accent: #0f172a;
-      --accent-text: #ffffff;
-      --soft: #eef2f7;
-      --highlight: #e8f0fe;
-      --danger: #991b1b;
-      --ok: #166534;
-      --warn: #92400e;
+      --line: #e3e5e8;
+      --text: #1d232a;
+      --muted: #68707a;
+      --accent: #2d6a4f;
+      --accent-soft: #eaf5ef;
     }
+
     * { box-sizing: border-box; }
-    body { margin: 0; font-family: Arial, Helvetica, sans-serif; background: var(--bg); color: var(--text); padding: 18px; }
-    .app { max-width: 1600px; margin: 0 auto; }
-    .panel { background: var(--card); border: 1px solid var(--border); border-radius: 18px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
-    .header { padding: 18px 20px 14px; margin-bottom: 14px; }
-    h1 { margin: 0 0 6px; font-size: 30px; }
-    .sub { margin: 0; color: var(--muted); }
-    .toolbar { display: grid; grid-template-columns: auto auto auto auto; gap: 10px; align-items: end; padding: 16px 20px 10px; justify-content: start; }
-    button, input { font: inherit; }
-    button { border: 0; border-radius: 12px; padding: 11px 16px; cursor: pointer; white-space: nowrap; }
-    .primary { background: var(--accent); color: var(--accent-text); }
-    .secondary { background: #e2e8f0; color: var(--text); }
-    .danger { background: #fee2e2; color: var(--danger); }
-    .meta-bar { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; padding: 0 20px 10px; color: var(--muted); font-size: 14px; }
-    #message { margin: 0 20px 12px; padding: 12px 14px; border-radius: 12px; display: none; white-space: pre-wrap; background: #f1f5f9; }
-    #message.ok { display:block; background:#ecfdf5; color:var(--ok); }
-    #message.warn { display:block; background:#fffbeb; color:var(--warn); }
-    #message.error { display:block; background:#fef2f2; color:var(--danger); }
-    .legend { display: flex; gap: 18px; padding: 0 20px 18px; flex-wrap: wrap; color: var(--muted); font-size: 14px; }
-    .legend span::before { content: ""; display: inline-block; width: 14px; height: 14px; border-radius: 4px; margin-right: 8px; vertical-align: -2px; border: 1px solid #cbd5e1; background: #fff; }
-    .legend .filled::before { background: var(--highlight); border-color: #bfd0ea; }
-    .legend .empty::before { background: #fff; border-style: dashed; }
-    .board-wrap { overflow-x: auto; padding: 10px; }
-    table.board { width: 100%; border-collapse: separate; border-spacing: 10px; table-layout: fixed; min-width: 1000px; }
-    th, td { vertical-align: top; }
-    th.role-head { width: 170px; text-align: left; padding: 12px; font-size: 18px; position: sticky; left: 0; z-index: 2; background: var(--card); }
-    th.date-head { background: var(--soft); border: 1px solid var(--border); border-radius: 16px; padding: 12px; text-align: center; min-width: 180px; }
-    .date-top { font-weight: 700; font-size: 17px; margin-bottom: 4px; }
-    .date-sub { color: var(--muted); font-size: 13px; }
-    .role-cell { position: sticky; left: 0; z-index: 1; background: var(--card); padding: 12px; border-radius: 16px; border: 1px solid var(--border); font-weight: 700; }
-    .signup-cell { border: 1px solid var(--border); border-radius: 16px; background: #fff; padding: 10px; min-height: 270px; }
-    .slots { display: grid; gap: 8px; }
-    .slot { width: 100%; text-align: left; background: #fff; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 10px 12px; min-height: 42px; }
-    .slot:hover { background: #f8fafc; }
-    .slot.filled { border-style: solid; border-color: #bfd0ea; background: var(--highlight); }
-    .slot-name { display: block; font-weight: 700; color: var(--text); }
-    .slot-empty { color: var(--muted); }
-    .cell-summary { margin-top: 10px; font-size: 13px; color: var(--muted); }
-    dialog { border: 0; border-radius: 18px; padding: 0; width: min(520px, calc(100vw - 30px)); box-shadow: 0 12px 40px rgba(0,0,0,0.22); }
-    dialog::backdrop { background: rgba(15, 23, 42, 0.38); }
-    .modal { padding: 20px; position: relative; }
-    .modal h2 { margin: 0 0 8px; font-size: 24px; }
-    .modal-info { color: var(--muted); margin-bottom: 16px; }
-    .field label { display: block; font-weight: 700; margin-bottom: 6px; }
-    .field-input { width: 100%; padding: 11px 12px; border: 1px solid var(--border); border-radius: 12px; background: #fff; font: inherit; }
-    .suggestions {
-      margin-top: 8px;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      max-height: 220px;
-      overflow-y: auto;
-      background: #fff;
-      display: none;
+
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
     }
-    .suggestion {
+
+    .wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.05);
+      overflow: hidden;
+    }
+
+    .header {
+      padding: 18px 20px 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 24px;
+    }
+
+    .sub {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 180px 130px;
+      gap: 12px;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--line);
+      align-items: end;
+    }
+
+    .field label {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .field input,
+    .field select,
+    button {
+      width: 100%;
       padding: 10px 12px;
-      border-bottom: 1px solid #eef2f7;
-      cursor: pointer;
+      border: 1px solid #cfd5db;
+      border-radius: 10px;
+      font-size: 14px;
+      background: #fff;
     }
-    .suggestion:last-child { border-bottom: none; }
-    .suggestion:hover, .suggestion.active { background: #eff6ff; }
-    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; margin-top: 16px; }
-    .small-note { font-size: 13px; color: var(--muted); margin-top: 10px; }
-    @media (max-width: 980px) { .toolbar { grid-template-columns: auto auto; } }
+
+    button {
+      background: var(--accent);
+      color: #fff;
+      cursor: pointer;
+      border-color: var(--accent);
+      font-weight: 600;
+    }
+
+    button:hover {
+      filter: brightness(.96);
+    }
+
+    .status {
+      padding: 12px 20px 0;
+      min-height: 32px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .board-meta {
+      padding: 6px 20px 16px;
+      font-size: 15px;
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      padding: 0 20px 20px;
+    }
+
+    .column {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .column h2 {
+      margin: 0;
+      padding: 12px 14px;
+      font-size: 18px;
+      background: var(--accent-soft);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .slot {
+      display: grid;
+      grid-template-columns: 36px 1fr;
+      gap: 10px;
+      align-items: center;
+      min-height: 48px;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .slot:last-child {
+      border-bottom: none;
+    }
+
+    .slot-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: #f1f3f5;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .slot-name.empty {
+      color: #98a1aa;
+      font-style: italic;
+    }
+
+    .error {
+      color: #a12626;
+      font-weight: 600;
+    }
+
+    .config {
+      margin: 16px 20px 20px;
+      padding: 14px;
+      border: 1px dashed #cfd5db;
+      border-radius: 12px;
+      background: #fbfcfd;
+      font-size: 14px;
+    }
+
+    .config code {
+      background: #eef2f6;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+
+    @media (max-width: 900px) {
+      .grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .controls {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .grid,
+      .controls {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="app">
-    <div class="panel header">
-      <h1>Wednesday PM Volunteer Signup Board</h1>
-      <p class="sub">Shows four Wednesdays at a time, starting from April 15, 2026. Click any slot to add, change, or remove a volunteer name.</p>
-    </div>
-
+  <div class="wrap">
     <div class="panel">
-      <div class="toolbar">
-        <button class="secondary" id="prevBtn" type="button">Previous Wednesdays</button>
-        <button class="secondary" id="startBtn" type="button">Go to 4/15/2026</button>
-        <button class="secondary" id="nextBtn" type="button">Next Wednesdays</button>
-        <button class="primary" id="refreshBtn" type="button">Refresh</button>
+      <div class="header">
+        <h1>Orchard Assignments</h1>
+        <div class="sub">Supabase-backed assignment board using the <strong>assignment_grid_rows</strong> view.</div>
       </div>
 
-      <div class="meta-bar">
-        <div id="summaryText">Wednesday PM only.</div>
-        <div id="rangeText"></div>
+      <div class="controls">
+        <div class="field">
+          <label for="serviceDate">Service Date</label>
+          <input id="serviceDate" type="date" value="2026-04-22" />
+        </div>
+
+        <div class="field">
+          <label for="shiftCode">Shift</label>
+          <select id="shiftCode">
+            <option value="PM" selected>PM</option>
+            <option value="AM">AM</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>&nbsp;</label>
+          <button id="loadBtn" type="button">Load Assignments</button>
+        </div>
       </div>
 
-      <div id="message"></div>
+      <div id="status" class="status"></div>
+      <div id="boardMeta" class="board-meta"></div>
 
-      <div class="legend">
-        <span class="empty">Open slot</span>
-        <span class="filled">Filled slot</span>
+      <div class="grid">
+        <div class="column">
+          <h2>Check In</h2>
+          <div id="check_in"></div>
+        </div>
+        <div class="column">
+          <h2>Parking</h2>
+          <div id="parking"></div>
+        </div>
+        <div class="column">
+          <h2>Greeter</h2>
+          <div id="greeter"></div>
+        </div>
+        <div class="column">
+          <h2>Transport</h2>
+          <div id="transport"></div>
+        </div>
       </div>
 
-      <div class="board-wrap">
-        <table class="board">
-          <thead id="boardHead"></thead>
-          <tbody id="boardBody"></tbody>
-        </table>
+      <div class="config">
+        Replace <code>YOUR_SUPABASE_URL</code> and <code>YOUR_SUPABASE_ANON_KEY</code> in the script before testing.
       </div>
     </div>
   </div>
 
-  <dialog id="slotDialog">
-    <div class="modal">
-      <h2>Edit Signup</h2>
-      <div class="modal-info" id="modalInfo"></div>
-
-      <div class="field">
-        <label for="nameInput">Volunteer name</label>
-        <input id="nameInput" class="field-input" type="text" placeholder="Start typing a name" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-        <div id="suggestions" class="suggestions"></div>
-      </div>
-
-      <div class="small-note">Save to add or change a name. Remove Name clears the slot.</div>
-
-      <div class="modal-actions">
-        <button class="danger" id="removeBtn" type="button">Remove Name</button>
-        <button class="secondary" type="button" id="cancelBtn">Cancel</button>
-        <button class="primary" type="button" id="saveBtn">Save</button>
-      </div>
-    </div>
-  </dialog>
-
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    const API_BASE_URL = "https://script.google.com/macros/s/AKfycbw31_pJpq2sih9rV0H3DvfXtTVmMYVT8qYHOZjZh0WbiG0SrlLatRNciyZhwrB0kUw/exec"
-    const SHIFT = "PM";
-    const DAYS_TO_SHOW = 4;
-    const START_WEDNESDAY = "2026-04-15";
-    const ROLES = [
-      { name: "Check In", slots: 8 },
-      { name: "Parking", slots: 8 },
-      { name: "Greeter", slots: 8 },
-      { name: "Transport", slots: 8 }
-    ];
+    const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
 
-    const boardHead = document.getElementById("boardHead");
-    const boardBody = document.getElementById("boardBody");
-    const messageEl = document.getElementById("message");
-    const summaryText = document.getElementById("summaryText");
-    const rangeText = document.getElementById("rangeText");
-    const dialog = document.getElementById("slotDialog");
-    const modalInfo = document.getElementById("modalInfo");
-    const nameInput = document.getElementById("nameInput");
-    const suggestionsEl = document.getElementById("suggestions");
-    const removeBtn = document.getElementById("removeBtn");
-    const saveBtn = document.getElementById("saveBtn");
+    const ROLE_ORDER = ['check_in', 'parking', 'greeter', 'transport'];
 
-    let names = [];
-    let boardData = {};
-    let currentEdit = null;
-    let startDate = parseISODate(START_WEDNESDAY);
-    let filteredNames = [];
-    let activeSuggestionIndex = -1;
+    const roleContainers = {
+      check_in: document.getElementById('check_in'),
+      parking: document.getElementById('parking'),
+      greeter: document.getElementById('greeter'),
+      transport: document.getElementById('transport')
+    };
 
-    function parseISODate(iso) {
-      const [y, m, d] = iso.split("-").map(Number);
-      return new Date(y, m - 1, d);
+    const statusEl = document.getElementById('status');
+    const boardMetaEl = document.getElementById('boardMeta');
+    const serviceDateEl = document.getElementById('serviceDate');
+    const shiftCodeEl = document.getElementById('shiftCode');
+    const loadBtn = document.getElementById('loadBtn');
+
+    function setStatus(message, isError = false) {
+      statusEl.textContent = message;
+      statusEl.className = isError ? 'status error' : 'status';
     }
-    function addDays(date, days) {
-      const d = new Date(date);
-      d.setDate(d.getDate() + days);
-      return d;
-    }
-    function toISO(date) {
-      const y = date.getFullYear();
-      const m = String(date.getMonth() + 1).padStart(2, "0");
-      const d = String(date.getDate()).padStart(2, "0");
-      return `${y}-${m}-${d}`;
-    }
-    function displayDate(date) {
-      return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(date);
-    }
-    function displayWeekday(date) {
-      return new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(date);
-    }
-    function toDisplayDate(iso) {
-      const parts = iso.split("-");
-      return `${parts[1]}/${parts[2]}/${parts[0]}`;
-    }
-    function getCellKey(dateISO, roleName) {
-      return `${dateISO}||${SHIFT}||${roleName}`;
-    }
-    function showMessage(text, type="ok") {
-      messageEl.textContent = text;
-      messageEl.className = type;
-    }
-    function clearMessage() {
-      messageEl.textContent = "";
-      messageEl.className = "";
-    }
-    function apiGet(action, params = {}) {
-      const url = new URL(API_BASE_URL);
-      url.searchParams.set("action", action);
-      Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, v));
-      return fetch(url.toString()).then(r => r.json());
-    }
-    function apiPost(payload) {
-      return fetch(API_BASE_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify(payload)
-      }).then(r => r.json());
-    }
-    async function loadNames() {
-      if (names.length) return;
-      const data = await apiGet("getNames");
-      if (!data.ok) throw new Error(data.error || "Could not load names.");
-      names = data.names || [];
-      names.sort((a, b) => (a.displayName || a.fullName).localeCompare(b.displayName || b.fullName));
-    }
-    function findPersonByName(name) {
-      const typed = name.trim().toLowerCase();
-      return names.find(p => ((p.displayName || p.fullName).trim().toLowerCase() === typed)) || null;
-    }
-    function updateSuggestions() {
-      const q = nameInput.value.trim().toLowerCase();
-      activeSuggestionIndex = -1;
-      if (!q) {
-        filteredNames = names.slice(0, 20);
-      } else {
-        filteredNames = names.filter(p => ((p.displayName || p.fullName).toLowerCase().includes(q))).slice(0, 20);
-      }
-      renderSuggestions();
-    }
-    function renderSuggestions() {
-      suggestionsEl.innerHTML = "";
-      if (!filteredNames.length) {
-        suggestionsEl.style.display = "none";
-        return;
-      }
-      filteredNames.forEach((person, idx) => {
-        const div = document.createElement("div");
-        div.className = "suggestion" + (idx === activeSuggestionIndex ? " active" : "");
-        div.textContent = person.displayName || person.fullName;
-        div.addEventListener("mousedown", (e) => {
-          e.preventDefault();
-          selectSuggestion(idx);
-        });
-        suggestionsEl.appendChild(div);
-      });
-      suggestionsEl.style.display = "block";
-    }
-    function selectSuggestion(idx) {
-      const person = filteredNames[idx];
-      if (!person) return;
-      nameInput.value = person.displayName || person.fullName;
-      suggestionsEl.style.display = "none";
-      filteredNames = [];
-      activeSuggestionIndex = -1;
-    }
-    function buildEmptyBoardData() {
-      boardData = {};
-      for (let i = 0; i < DAYS_TO_SHOW; i++) {
-        const dateISO = toISO(addDays(startDate, i * 7));
-        ROLES.forEach(role => {
-          boardData[getCellKey(dateISO, role.name)] = Array(role.slots).fill(null);
-        });
-      }
-    }
-    async function loadBoard() {
-      clearMessage();
-      if (!API_BASE_URL || API_BASE_URL.includes("PASTE_YOUR")) {
-        showMessage("Paste your Apps Script web app URL into API_BASE_URL first.", "warn");
-        return;
-      }
-      try {
-        await loadNames();
-        buildEmptyBoardData();
 
-        const dates = [];
-        for (let i = 0; i < DAYS_TO_SHOW; i++) dates.push(toISO(addDays(startDate, i * 7)));
-
-        const results = await Promise.all(
-          dates.map(dateISO => apiGet("getAssignments", { serviceDate: dateISO, shift: SHIFT }))
-        );
-
-        results.forEach((data, idx) => {
-          if (!data.ok) throw new Error(data.error || "Could not load assignments.");
-          const dateISO = dates[idx];
-          (data.assignments || []).forEach(row => {
-            const key = getCellKey(dateISO, row.role);
-            if (!boardData[key]) return;
-            const slot = Number(row.slotNumber) - 1;
-            if (slot >= 0 && slot < boardData[key].length) {
-              boardData[key][slot] = row;
-            }
-          });
-        });
-
-        buildBoard();
-        updateSummary();
-        showMessage("Board loaded.", "ok");
-      } catch (err) {
-        showMessage(err.message || "Load failed.", "error");
-      }
-    }
-    function updateSummary() {
-      let filled = 0;
-      let total = 0;
-      for (let i = 0; i < DAYS_TO_SHOW; i++) {
-        const dateISO = toISO(addDays(startDate, i * 7));
-        ROLES.forEach(role => {
-          const rows = boardData[getCellKey(dateISO, role.name)] || [];
-          total += role.slots;
-          rows.forEach(x => { if (x) filled++; });
-        });
-      }
-      summaryText.textContent = `${filled} of ${total} Wednesday PM slots filled.`;
-      const start = displayDate(startDate);
-      const end = displayDate(addDays(startDate, (DAYS_TO_SHOW - 1) * 7));
-      rangeText.textContent = `${start} – ${end}`;
-    }
-    function buildBoard() {
-      boardHead.innerHTML = "";
-      boardBody.innerHTML = "";
-
-      const headRow = document.createElement("tr");
-      const topLeft = document.createElement("th");
-      topLeft.className = "role-head";
-      topLeft.textContent = "Role";
-      headRow.appendChild(topLeft);
-
-      const dates = [];
-      for (let i = 0; i < DAYS_TO_SHOW; i++) dates.push(addDays(startDate, i * 7));
-
-      dates.forEach(date => {
-        const th = document.createElement("th");
-        th.className = "date-head";
-        th.innerHTML = `
-          <div class="date-top">${displayDate(date)}</div>
-          <div class="date-sub">${displayWeekday(date)} · PM · Youth Night</div>
-        `;
-        headRow.appendChild(th);
-      });
-      boardHead.appendChild(headRow);
-
-      ROLES.forEach(role => {
-        const tr = document.createElement("tr");
-
-        const roleCell = document.createElement("td");
-        roleCell.className = "role-cell";
-        roleCell.textContent = role.name;
-        tr.appendChild(roleCell);
-
-        dates.forEach(date => {
-          const dateISO = toISO(date);
-          const td = document.createElement("td");
-          const wrap = document.createElement("div");
-          wrap.className = "signup-cell";
-          const slots = document.createElement("div");
-          slots.className = "slots";
-
-          const rows = boardData[getCellKey(dateISO, role.name)] || Array(role.slots).fill(null);
-          let filled = 0;
-
-          rows.forEach((row, slotIndex) => {
-            if (row) filled++;
-            const btn = document.createElement("button");
-            btn.type = "button";
-            btn.className = "slot";
-            if (row) btn.classList.add("filled");
-
-            btn.addEventListener("click", () => openEditor({
-              dateISO,
-              dateLabel: `${displayWeekday(date)}, ${displayDate(date)}`,
-              role: role.name,
-              slotIndex,
-              slotNumber: slotIndex + 1,
-              slotCount: role.slots,
-              value: row
-            }));
-
-            if (row) {
-              const name = document.createElement("span");
-              name.className = "slot-name";
-              name.textContent = row.fullName;
-              btn.appendChild(name);
-            } else {
-              const empty = document.createElement("span");
-              empty.className = "slot-empty";
-              empty.textContent = `Open slot ${slotIndex + 1}`;
-              btn.appendChild(empty);
-            }
-            slots.appendChild(btn);
-          });
-
-          const summary = document.createElement("div");
-          summary.className = "cell-summary";
-          summary.textContent = `${filled} of ${role.slots} filled`;
-
-          wrap.appendChild(slots);
-          wrap.appendChild(summary);
-          td.appendChild(wrap);
-          tr.appendChild(td);
-        });
-
-        boardBody.appendChild(tr);
+    function emptyBoard() {
+      ROLE_ORDER.forEach(role => {
+        roleContainers[role].innerHTML = '';
+        for (let slot = 1; slot <= 8; slot += 1) {
+          const row = document.createElement('div');
+          row.className = 'slot';
+          row.innerHTML = `
+            <div class="slot-num">${slot}</div>
+            <div class="slot-name empty">Open</div>
+          `;
+          roleContainers[role].appendChild(row);
+        }
       });
     }
-    function openEditor(details) {
-      currentEdit = details;
-      modalInfo.textContent = `${details.dateLabel} · PM · Youth Night · ${details.role} · Slot ${details.slotNumber}`;
-      nameInput.value = details.value ? details.value.fullName : "";
-      removeBtn.disabled = !details.value;
-      suggestionsEl.style.display = "none";
-      dialog.showModal();
-      setTimeout(() => {
-        nameInput.focus();
-        nameInput.select();
-        updateSuggestions();
-      }, 0);
+
+    function renderBoard(rows, serviceDate, shiftCode) {
+      emptyBoard();
+
+      const byRoleAndSlot = new Map();
+      rows.forEach(row => {
+        byRoleAndSlot.set(`${row.assignment_role}:${row.assignment_slot}`, row);
+      });
+
+      ROLE_ORDER.forEach(role => {
+        const container = roleContainers[role];
+        container.innerHTML = '';
+
+        for (let slot = 1; slot <= 8; slot += 1) {
+          const key = `${role}:${slot}`;
+          const match = byRoleAndSlot.get(key);
+          const name = match?.full_name || 'Open';
+          const isEmpty = !match;
+
+          const row = document.createElement('div');
+          row.className = 'slot';
+          row.innerHTML = `
+            <div class="slot-num">${slot}</div>
+            <div class="slot-name ${isEmpty ? 'empty' : ''}">${name}</div>
+          `;
+          container.appendChild(row);
+        }
+      });
+
+      boardMetaEl.textContent = `${serviceDate} • ${shiftCode}`;
     }
-    function closeEditor() {
-      dialog.close();
-      currentEdit = null;
-      suggestionsEl.style.display = "none";
-    }
-    async function saveCurrentSlot() {
-      if (!currentEdit) return;
-      const typedName = nameInput.value.trim();
-      if (!typedName) {
-        showMessage("Enter a volunteer name or use Remove Name to clear the slot.", "warn");
+
+    async function loadAssignments() {
+      const serviceDate = serviceDateEl.value;
+      const shiftCode = shiftCodeEl.value;
+
+      if (!serviceDate) {
+        setStatus('Choose a service date first.', true);
         return;
       }
-      const person = findPersonByName(typedName);
-      if (!person) {
-        showMessage("Choose a volunteer name from the suggestions list.", "warn");
+
+      if (
+        SUPABASE_URL === 'https://tfkdkekvtuqepjqsgjoc.supabase.co' ||
+        SUPABASE_ANON_KEY === 'sb_publishable_JRFxF6A8mDcZX2D05CdoCQ_F6_rDbwh'
+      ) {
+        setStatus('Add your Supabase URL and anon key in the script first.', true);
         return;
       }
 
-      saveBtn.disabled = true;
-      saveBtn.textContent = "Saving...";
+      setStatus('Loading...');
+      boardMetaEl.textContent = '';
+
       try {
-        const data = await apiPost({
-          action: "saveAssignment",
-          serviceDate: currentEdit.dateISO,
-          displayDate: toDisplayDate(currentEdit.dateISO),
-          shift: SHIFT,
-          role: currentEdit.role,
-          slotNumber: currentEdit.slotNumber,
-          personID: person.personID,
-          fullName: person.fullName,
-          userType: "volunteer",
-          userName: person.fullName,
-          allowOverwrite: true
-        });
-        if (!data.ok) throw new Error(data.error || "Save failed.");
+        const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        closeEditor();
-        await loadBoard();
-        showMessage(data.message || "Saved.", "ok");
+        const { data, error } = await client
+          .from('assignment_grid_rows')
+          .select('assignment_id,service_date,shift_code,shift_label,assignment_role,assignment_slot,full_name,status')
+          .eq('service_date', serviceDate)
+          .eq('shift_code', shiftCode)
+          .order('assignment_role', { ascending: true })
+          .order('assignment_slot', { ascending: true });
+
+        if (error) throw error;
+
+        renderBoard(data || [], serviceDate, shiftCode);
+        setStatus(`${(data || []).length} assignment row(s) loaded.`);
       } catch (err) {
-        showMessage(err.message || "Save failed.", "error");
-      } finally {
-        saveBtn.disabled = false;
-        saveBtn.textContent = "Save";
-      }
-    }
-    async function removeCurrentSlot() {
-      if (!currentEdit || !currentEdit.value) return;
-
-      removeBtn.disabled = true;
-      removeBtn.textContent = "Removing...";
-      try {
-        const data = await apiPost({
-          action: "removeAssignment",
-          serviceDate: currentEdit.dateISO,
-          displayDate: toDisplayDate(currentEdit.dateISO),
-          shift: SHIFT,
-          role: currentEdit.role,
-          slotNumber: currentEdit.slotNumber,
-          userType: "volunteer",
-          userName: currentEdit.value.fullName
-        });
-        if (!data.ok) throw new Error(data.error || "Remove failed.");
-
-        closeEditor();
-        await loadBoard();
-        showMessage(data.message || "Removed.", "ok");
-      } catch (err) {
-        showMessage(err.message || "Remove failed.", "error");
-      } finally {
-        removeBtn.disabled = false;
-        removeBtn.textContent = "Remove Name";
+        console.error(err);
+        setStatus(`Load failed: ${err.message}`, true);
+        emptyBoard();
       }
     }
 
-    nameInput.addEventListener("input", updateSuggestions);
-    nameInput.addEventListener("focus", updateSuggestions);
-    nameInput.addEventListener("keydown", (e) => {
-      if (!filteredNames.length) return;
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        activeSuggestionIndex = Math.min(activeSuggestionIndex + 1, filteredNames.length - 1);
-        renderSuggestions();
-      } else if (e.key === "ArrowUp") {
-        e.preventDefault();
-        activeSuggestionIndex = Math.max(activeSuggestionIndex - 1, 0);
-        renderSuggestions();
-      } else if (e.key === "Enter" && activeSuggestionIndex >= 0) {
-        e.preventDefault();
-        selectSuggestion(activeSuggestionIndex);
-      } else if (e.key === "Escape") {
-        suggestionsEl.style.display = "none";
-      }
-    });
-    nameInput.addEventListener("blur", () => {
-      setTimeout(() => { suggestionsEl.style.display = "none"; }, 150);
-    });
-
-    document.getElementById("cancelBtn").addEventListener("click", closeEditor);
-    saveBtn.addEventListener("click", saveCurrentSlot);
-    removeBtn.addEventListener("click", removeCurrentSlot);
-
-    document.getElementById("prevBtn").addEventListener("click", async () => {
-      startDate = addDays(startDate, -28);
-      await loadBoard();
-    });
-    document.getElementById("nextBtn").addEventListener("click", async () => {
-      startDate = addDays(startDate, 28);
-      await loadBoard();
-    });
-    document.getElementById("startBtn").addEventListener("click", async () => {
-      startDate = parseISODate(START_WEDNESDAY);
-      await loadBoard();
-    });
-    document.getElementById("refreshBtn").addEventListener("click", loadBoard);
-
-    buildEmptyBoardData();
-    buildBoard();
-    updateSummary();
-    loadBoard();
+    loadBtn.addEventListener('click', loadAssignments);
+    emptyBoard();
+    loadAssignments();
   </script>
 </body>
 </html>
