@@ -88,9 +88,7 @@
       font-weight: 600;
     }
 
-    button:hover {
-      filter: brightness(.96);
-    }
+    button:hover { filter: brightness(.96); }
 
     .status {
       padding: 12px 20px 0;
@@ -138,9 +136,7 @@
       border-bottom: 1px solid var(--line);
     }
 
-    .slot:last-child {
-      border-bottom: none;
-    }
+    .slot:last-child { border-bottom: none; }
 
     .slot-num {
       width: 28px;
@@ -165,20 +161,13 @@
     }
 
     @media (max-width: 900px) {
-      .grid {
-        grid-template-columns: 1fr 1fr;
-      }
-
-      .controls {
-        grid-template-columns: 1fr 1fr;
-      }
+      .grid { grid-template-columns: 1fr 1fr; }
+      .controls { grid-template-columns: 1fr 1fr; }
     }
 
     @media (max-width: 640px) {
       .grid,
-      .controls {
-        grid-template-columns: 1fr;
-      }
+      .controls { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -187,7 +176,7 @@
     <div class="panel">
       <div class="header">
         <h1>Orchard Assignments</h1>
-        <div class="sub">Assignment board using the <strong>assignment_grid_rows</strong> view.</div>
+        <div class="sub">Supabase-backed assignment board using the <strong>assignment_grid_rows</strong> view.</div>
       </div>
 
       <div class="controls">
@@ -210,7 +199,7 @@
         </div>
       </div>
 
-      <div id="status" class="status">Choose a date and shift, then click Load Assignments.</div>
+      <div id="status" class="status"></div>
       <div id="boardMeta" class="board-meta"></div>
 
       <div class="grid">
@@ -240,6 +229,12 @@
     const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
 
     const ROLE_ORDER = ['check_in', 'parking', 'greeter', 'transport'];
+    const ROLE_LABELS = {
+      check_in: 'Check In',
+      parking: 'Parking',
+      greeter: 'Greeter',
+      transport: 'Transport'
+    };
 
     const roleContainers = {
       check_in: document.getElementById('check_in'),
@@ -314,15 +309,12 @@
         return;
       }
 
-      if (
-        SUPABASE_URL === 'YOUR_SUPABASE_URL' ||
-        SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY'
-      ) {
-        setStatus('Supabase connection values are missing in the script.', true);
+      if (SUPABASE_URL === 'YOUR_SUPABASE_URL' || SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY') {
+        setStatus('Add your Supabase URL and anon key in the script first.', true);
         return;
       }
 
-      setStatus('Loading assignments...');
+      setStatus('Loading...');
       boardMetaEl.textContent = '';
 
       try {
@@ -330,40 +322,26 @@
 
         const { data, error } = await client
           .from('assignment_grid_rows')
-          .select('assignment_id, service_date, shift_code, shift_label, assignment_role, assignment_slot, full_name, status')
+          .select('assignment_id,service_date,shift_code,shift_label,assignment_role,assignment_slot,full_name,status')
           .eq('service_date', serviceDate)
           .eq('shift_code', shiftCode)
           .order('assignment_role', { ascending: true })
           .order('assignment_slot', { ascending: true });
 
-        if (error) {
-          throw error;
-        }
+        if (error) throw error;
 
-        const rows = data || [];
-        renderBoard(rows, serviceDate, shiftCode);
-
-        if (rows.length === 0) {
-          setStatus('No assignments found for that date and shift.');
-        } else {
-          setStatus(`${rows.length} assignment row(s) loaded.`);
-        }
+        renderBoard(data || [], serviceDate, shiftCode);
+        setStatus(`${(data || []).length} assignment row(s) loaded.`);
       } catch (err) {
-        console.error('Supabase load error:', err);
+        console.error(err);
+        setStatus(`Load failed: ${err.message}`, true);
         emptyBoard();
-
-        let msg = err?.message || 'Unknown error';
-
-        if (msg.toLowerCase().includes('permission denied')) {
-          msg = 'Permission denied. Check the view permissions or Row Level Security in Supabase.';
-        }
-
-        setStatus(`Unable to load assignments. ${msg}`, true);
       }
     }
 
     loadBtn.addEventListener('click', loadAssignments);
     emptyBoard();
+    loadAssignments();
   </script>
 </body>
 </html>
