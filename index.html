@@ -505,18 +505,34 @@ async function saveAssignment() {
   setStatus('Saving...');
 
   try {
+    const { data: serviceDay, error: serviceDayError } = await client
+      .from('service_days')
+      .select('id')
+      .eq('service_date', service_date)
+      .single();
+
+    if (serviceDayError) throw serviceDayError;
+
+    const { data: shiftRow, error: shiftError } = await client
+      .from('shifts')
+      .select('id')
+      .eq('code', shift_code)
+      .single();
+
+    if (shiftError) throw shiftError;
+
     const payload = {
-      service_date,
-      shift_code,
+      service_day_id: serviceDay.id,
+      shift_id: shiftRow.id,
+      full_name_snapshot: fullName,
       assignment_role: activeSlot.role,
-      assignment_slot: activeSlot.slot,
-      full_name_snapshot: fullName
+      assignment_slot: activeSlot.slot
     };
 
     const { error } = await client
       .from(WRITE_TABLE)
       .upsert(payload, {
-        onConflict: 'service_date,shift_code,assignment_role,assignment_slot'
+        onConflict: 'service_day_id,shift_id,assignment_role,assignment_slot'
       });
 
     if (error) throw error;
@@ -531,32 +547,47 @@ async function saveAssignment() {
 }
 
     async function removeAssignment() {
-      if (!activeSlot) return;
+  if (!activeSlot) return;
 
-      const { service_date, shift_code } = getBoardContext();
+  const { service_date, shift_code } = getBoardContext();
 
-      setStatus('Removing...');
+  setStatus('Removing...');
 
-      try {
-        const { error } = await client
-          .from(WRITE_TABLE)
-          .delete()
-          .eq('service_date', service_date)
-          .eq('shift_code', shift_code)
-          .eq('assignment_role', activeSlot.role)
-          .eq('assignment_slot', activeSlot.slot);
+  try {
+    const { data: serviceDay, error: serviceDayError } = await client
+      .from('service_days')
+      .select('id')
+      .eq('service_date', service_date)
+      .single();
 
-        if (error) throw error;
+    if (serviceDayError) throw serviceDayError;
 
-        closeEditor();
-        await loadAssignments();
-        setStatus(`Assignment removed.`);
-      } catch (err) {
-        console.error(err);
-        setStatus(`Remove failed: ${err.message}`, true);
-      }
-    }
+    const { data: shiftRow, error: shiftError } = await client
+      .from('shifts')
+      .select('id')
+      .eq('code', shift_code)
+      .single();
 
+    if (shiftError) throw shiftError;
+
+    const { error } = await client
+      .from(WRITE_TABLE)
+      .delete()
+      .eq('service_day_id', serviceDay.id)
+      .eq('shift_id', shiftRow.id)
+      .eq('assignment_role', activeSlot.role)
+      .eq('assignment_slot', activeSlot.slot);
+
+    if (error) throw error;
+
+    closeEditor();
+    await loadAssignments();
+    setStatus('Assignment removed.');
+  } catch (err) {
+    console.error(err);
+    setStatus(`Remove failed: ${err.message}`, true);
+  }
+}
     loadBtn.addEventListener('click', loadAssignments);
     saveBtn.addEventListener('click', saveAssignment);
     clearBtn.addEventListener('click', removeAssignment);
