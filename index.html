@@ -491,44 +491,44 @@
       }
     }
 
-    async function saveAssignment() {
-      if (!activeSlot) return;
+async function saveAssignment() {
+  if (!activeSlot) return;
 
-      const fullName = nameInput.value.trim();
-      const { service_date, shift_code } = getBoardContext();
+  const fullName = nameInput.value.trim();
+  const { service_date, shift_code } = getBoardContext();
 
-      if (!fullName) {
-        setStatus('Enter a name or use Remove.', true);
-        return;
-      }
+  if (!fullName) {
+    setStatus('Enter a name or use Remove.', true);
+    return;
+  }
 
-      setStatus('Saving...');
+  setStatus('Saving...');
 
-      try {
-        const payload = {
-          service_date,
-          shift_code,
-          assignment_role: activeSlot.role,
-          assignment_slot: activeSlot.slot,
-          full_name: fullName
-        };
+  try {
+    const payload = {
+      service_date,
+      shift_code,
+      assignment_role: activeSlot.role,
+      assignment_slot: activeSlot.slot,
+      full_name_snapshot: fullName
+    };
 
-        const { error } = await client
-          .from(WRITE_TABLE)
-          .upsert(payload, {
-            onConflict: 'service_date,shift_code,assignment_role,assignment_slot'
-          });
+    const { error } = await client
+      .from(WRITE_TABLE)
+      .upsert(payload, {
+        onConflict: 'service_date,shift_code,assignment_role,assignment_slot'
+      });
 
-        if (error) throw error;
+    if (error) throw error;
 
-        closeEditor();
-        await loadAssignments();
-        setStatus(`Saved ${fullName}.`);
-      } catch (err) {
-        console.error(err);
-        setStatus(`Save failed: ${err.message}`, true);
-      }
-    }
+    closeEditor();
+    await loadAssignments();
+    setStatus(`Saved ${fullName}.`);
+  } catch (err) {
+    console.error(err);
+    setStatus(`Save failed: ${err.message}`, true);
+  }
+}
 
     async function removeAssignment() {
       if (!activeSlot) return;
