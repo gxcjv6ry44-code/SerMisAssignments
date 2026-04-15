@@ -164,21 +164,6 @@
       font-weight: 600;
     }
 
-    .config {
-      margin: 16px 20px 20px;
-      padding: 14px;
-      border: 1px dashed #cfd5db;
-      border-radius: 12px;
-      background: #fbfcfd;
-      font-size: 14px;
-    }
-
-    .config code {
-      background: #eef2f6;
-      padding: 2px 6px;
-      border-radius: 6px;
-    }
-
     @media (max-width: 900px) {
       .grid {
         grid-template-columns: 1fr 1fr;
@@ -202,7 +187,7 @@
     <div class="panel">
       <div class="header">
         <h1>Orchard Assignments</h1>
-        <div class="sub">Supabase-backed assignment board using the <strong>assignment_grid_rows</strong> view.</div>
+        <div class="sub">Assignment board using the <strong>assignment_grid_rows</strong> view.</div>
       </div>
 
       <div class="controls">
@@ -225,7 +210,7 @@
         </div>
       </div>
 
-      <div id="status" class="status"></div>
+      <div id="status" class="status">Choose a date and shift, then click Load Assignments.</div>
       <div id="boardMeta" class="board-meta"></div>
 
       <div class="grid">
@@ -245,10 +230,6 @@
           <h2>Transport</h2>
           <div id="transport"></div>
         </div>
-      </div>
-
-      <div class="config">
-        Replace <code>YOUR_SUPABASE_URL</code> and <code>YOUR_SUPABASE_ANON_KEY</code> in the script before testing.
       </div>
     </div>
   </div>
@@ -334,14 +315,14 @@
       }
 
       if (
-        SUPABASE_URL === 'https://tfkdkekvtuqepjqsgjoc.supabase.co' ||
-        SUPABASE_ANON_KEY === 'sb_publishable_JRFxF6A8mDcZX2D05CdoCQ_F6_rDbwh'
+        SUPABASE_URL === 'YOUR_SUPABASE_URL' ||
+        SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY'
       ) {
-        setStatus('Add your Supabase URL and anon key in the script first.', true);
+        setStatus('Supabase connection values are missing in the script.', true);
         return;
       }
 
-      setStatus('Loading...');
+      setStatus('Loading assignments...');
       boardMetaEl.textContent = '';
 
       try {
@@ -349,26 +330,40 @@
 
         const { data, error } = await client
           .from('assignment_grid_rows')
-          .select('assignment_id,service_date,shift_code,shift_label,assignment_role,assignment_slot,full_name,status')
+          .select('assignment_id, service_date, shift_code, shift_label, assignment_role, assignment_slot, full_name, status')
           .eq('service_date', serviceDate)
           .eq('shift_code', shiftCode)
           .order('assignment_role', { ascending: true })
           .order('assignment_slot', { ascending: true });
 
-        if (error) throw error;
+        if (error) {
+          throw error;
+        }
 
-        renderBoard(data || [], serviceDate, shiftCode);
-        setStatus(`${(data || []).length} assignment row(s) loaded.`);
+        const rows = data || [];
+        renderBoard(rows, serviceDate, shiftCode);
+
+        if (rows.length === 0) {
+          setStatus('No assignments found for that date and shift.');
+        } else {
+          setStatus(`${rows.length} assignment row(s) loaded.`);
+        }
       } catch (err) {
-        console.error(err);
-        setStatus(`Load failed: ${err.message}`, true);
+        console.error('Supabase load error:', err);
         emptyBoard();
+
+        let msg = err?.message || 'Unknown error';
+
+        if (msg.toLowerCase().includes('permission denied')) {
+          msg = 'Permission denied. Check the view permissions or Row Level Security in Supabase.';
+        }
+
+        setStatus(`Unable to load assignments. ${msg}`, true);
       }
     }
 
     loadBtn.addEventListener('click', loadAssignments);
     emptyBoard();
-    loadAssignments();
   </script>
 </body>
 </html>
