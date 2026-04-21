@@ -429,7 +429,6 @@
 
     const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    let currentRows = [];
     let activeSlot = null;
     let volunteerNames = [];
     let filteredSuggestions = [];
@@ -447,12 +446,20 @@
       };
     }
 
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
     function emptyBoard() {
       ROLE_ORDER.forEach(role => {
         roleContainers[role].innerHTML = '';
         for (let slot = 1; slot <= 8; slot += 1) {
-          const rowEl = buildSlotElement(role, slot, null);
-          roleContainers[role].appendChild(rowEl);
+          roleContainers[role].appendChild(buildSlotElement(role, slot, null));
         }
       });
     }
@@ -461,12 +468,7 @@
       const rowEl = document.createElement('div');
       rowEl.className = 'slot';
 
-      const name =
-        row?.full_name_snapshot ||
-        row?.full_name ||
-        row?.volunteer_name ||
-        'Open';
-
+      const name = row?.full_name || 'Open';
       const isEmpty = !row;
 
       rowEl.innerHTML = `
@@ -479,10 +481,9 @@
     }
 
     function renderBoard(rows, serviceDate, shiftCode) {
-      currentRows = rows || [];
-
       const byRoleAndSlot = new Map();
-      currentRows.forEach(row => {
+
+      (rows || []).forEach(row => {
         byRoleAndSlot.set(`${row.assignment_role}:${row.assignment_slot}`, row);
       });
 
@@ -512,14 +513,11 @@
 
       modalTitle.textContent = `${ROLE_LABELS[role]} — Slot ${slot}`;
       modalSub.textContent = `${service_date} • ${shift_code}`;
-      nameInput.value =
-        row?.full_name_snapshot ||
-        row?.full_name ||
-        row?.volunteer_name ||
-        '';
+      nameInput.value = row?.full_name || '';
 
       hideSuggestions();
       modalBackdrop.classList.add('open');
+
       setTimeout(() => {
         nameInput.focus();
         nameInput.select();
@@ -549,21 +547,18 @@
         return;
       }
 
-      nameSuggestions.innerHTML = items
-        .map((name, index) => `
-          <div class="suggestion-item" data-index="${index}">
-            ${escapeHtml(name)}
-          </div>
-        `)
-        .join('');
+      nameSuggestions.innerHTML = items.map((name, index) => `
+        <div class="suggestion-item" data-index="${index}">
+          ${escapeHtml(name)}
+        </div>
+      `).join('');
 
       nameSuggestions.classList.add('open');
 
       Array.from(nameSuggestions.querySelectorAll('.suggestion-item')).forEach(item => {
         item.addEventListener('mousedown', (e) => {
           e.preventDefault();
-          const index = Number(item.dataset.index);
-          pickSuggestion(index);
+          pickSuggestion(Number(item.dataset.index));
         });
       });
     }
@@ -581,13 +576,23 @@
       hideSuggestions();
     }
 
-    function escapeHtml(value) {
-      return String(value)
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#039;');
+    function getNameMatches(term) {
+      const q = term.trim().toLowerCase();
+      if (!q) return [];
+
+      const startsWith = [];
+      const contains = [];
+
+      for (const name of volunteerNames) {
+        const lower = name.toLowerCase();
+        if (lower.startsWith(q)) {
+          startsWith.push(name);
+        } else if (lower.includes(q)) {
+          contains.push(name);
+        }
+      }
+
+      return [...startsWith, ...contains].slice(0, 12);
     }
 
     async function loadVolunteerNames() {
@@ -606,31 +611,10 @@
             .map(name => name.trim())
             .filter(Boolean)
         )];
-
       } catch (err) {
         console.error(err);
         setStatus(`Volunteer names could not be loaded: ${err.message}`, true);
       }
-    }
-
-    function getNameMatches(term) {
-      const q = term.trim().toLowerCase();
-      if (!q) return [];
-
-      const startsWith = [];
-      const contains = [];
-
-      for (const name of volunteerNames) {
-        const lower = name.toLowerCase();
-
-        if (lower.startsWith(q)) {
-          startsWith.push(name);
-        } else if (lower.includes(q)) {
-          contains.push(name);
-        }
-      }
-
-      return [...startsWith, ...contains].slice(0, 12);
     }
 
     async function loadAssignments() {
@@ -638,14 +622,6 @@
 
       if (!service_date) {
         setStatus('Choose a service date first.', true);
-        return;
-      }
-
-      if (
-        SUPABASE_URL === 'YOUR_SUPABASE_URL' ||
-        SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY'
-      ) {
-        setStatus('Add your Supabase URL and anon key in the script first.', true);
         return;
       }
 
@@ -663,7 +639,8 @@
             assignment_role,
             assignment_slot,
             full_name,
-            full_name_snapshot,
+            phone,
+            email,
             status
           `)
           .eq('service_date', service_date)
@@ -712,9 +689,16 @@
 
         if (shiftError) throw shiftError;
 
+        const { data: volunteerRow } = await client
+          .from(VOLUNTEER_TABLE)
+          .select('id')
+          .eq('full_name', fullName)
+          .maybeSingle();
+
         const payload = {
           service_day_id: serviceDay.id,
           shift_id: shiftRow.id,
+          volunteer_id: volunteerRow?.id || null,
           full_name_snapshot: fullName,
           assignment_role: activeSlot.role,
           assignment_slot: activeSlot.slot
@@ -781,8 +765,7 @@
     }
 
     nameInput.addEventListener('input', () => {
-      const matches = getNameMatches(nameInput.value);
-      showSuggestions(matches);
+      showSuggestions(getNameMatches(nameInput.value));
     });
 
     nameInput.addEventListener('keydown', (e) => {
