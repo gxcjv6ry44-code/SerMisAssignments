@@ -63,6 +63,10 @@
       align-items: end;
     }
 
+    .field {
+      position: relative;
+    }
+
     .field label {
       display: block;
       font-size: 13px;
@@ -80,6 +84,14 @@
       border-radius: 10px;
       font-size: 14px;
       background: #fff;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .modal input:focus {
+      outline: none;
+      border-color: #7aa58c;
+      box-shadow: 0 0 0 3px rgba(45,106,79,.12);
     }
 
     button {
@@ -207,7 +219,8 @@
       border-radius: 16px;
       box-shadow: 0 10px 30px rgba(0,0,0,.2);
       border: 1px solid var(--line);
-      overflow: hidden;
+      overflow: visible;
+      position: relative;
     }
 
     .modal-header {
@@ -228,6 +241,7 @@
 
     .modal-body {
       padding: 16px 18px;
+      overflow: visible;
     }
 
     .modal-actions {
@@ -235,6 +249,47 @@
       grid-template-columns: 1fr 1fr 1fr;
       gap: 10px;
       padding: 0 18px 18px;
+    }
+
+    .suggestions {
+      display: none;
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: calc(100% + 6px);
+      background: #fff;
+      border: 1px solid #cfd5db;
+      border-radius: 10px;
+      max-height: 220px;
+      overflow-y: auto;
+      z-index: 2000;
+      box-shadow: 0 10px 20px rgba(0,0,0,.08);
+    }
+
+    .suggestions.open {
+      display: block;
+    }
+
+    .suggestion-item {
+      padding: 10px 12px;
+      cursor: pointer;
+      border-bottom: 1px solid #eef1f3;
+      font-size: 14px;
+    }
+
+    .suggestion-item:last-child {
+      border-bottom: none;
+    }
+
+    .suggestion-item:hover,
+    .suggestion-item.active {
+      background: var(--accent-soft);
+    }
+
+    .hint {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--muted);
     }
 
     @media (max-width: 900px) {
@@ -310,12 +365,21 @@
         <div id="modalTitle" class="modal-title">Edit Assignment</div>
         <div id="modalSub" class="modal-sub"></div>
       </div>
+
       <div class="modal-body">
         <div class="field">
           <label for="nameInput">Volunteer Name</label>
-          <input id="nameInput" type="text" placeholder="Enter full name" />
+          <input
+            id="nameInput"
+            type="text"
+            placeholder="Type a few letters to search names"
+            autocomplete="off"
+          />
+          <div id="nameSuggestions" class="suggestions"></div>
+          <div class="hint">Start typing and choose a matching volunteer name.</div>
         </div>
       </div>
+
       <div class="modal-actions">
         <button id="saveBtn" type="button">Save</button>
         <button id="clearBtn" type="button" class="btn-danger">Remove</button>
@@ -331,6 +395,7 @@
 
     const READ_SOURCE = 'assignment_grid_rows';
     const WRITE_TABLE = 'assignments';
+    const VOLUNTEER_TABLE = 'volunteers';
 
     const ROLE_ORDER = ['check_in', 'parking', 'greeter', 'transport'];
     const ROLE_LABELS = {
@@ -357,6 +422,7 @@
     const modalTitle = document.getElementById('modalTitle');
     const modalSub = document.getElementById('modalSub');
     const nameInput = document.getElementById('nameInput');
+    const nameSuggestions = document.getElementById('nameSuggestions');
     const saveBtn = document.getElementById('saveBtn');
     const clearBtn = document.getElementById('clearBtn');
     const cancelBtn = document.getElementById('cancelBtn');
@@ -365,6 +431,9 @@
 
     let currentRows = [];
     let activeSlot = null;
+    let volunteerNames = [];
+    let filteredSuggestions = [];
+    let highlightedSuggestionIndex = -1;
 
     function setStatus(message, isError = false) {
       statusEl.textContent = message;
@@ -392,12 +461,17 @@
       const rowEl = document.createElement('div');
       rowEl.className = 'slot';
 
-      const name = row?.full_name || 'Open';
+      const name =
+        row?.full_name_snapshot ||
+        row?.full_name ||
+        row?.volunteer_name ||
+        'Open';
+
       const isEmpty = !row;
 
       rowEl.innerHTML = `
         <div class="slot-num">${slot}</div>
-        <div class="slot-name ${isEmpty ? 'empty' : ''}">${name}</div>
+        <div class="slot-name ${isEmpty ? 'empty' : ''}">${escapeHtml(name)}</div>
       `;
 
       rowEl.addEventListener('click', () => openEditor(role, slot, row));
@@ -434,22 +508,129 @@
         return;
       }
 
-      activeSlot = {
-        role,
-        slot,
-        row
-      };
+      activeSlot = { role, slot, row };
 
       modalTitle.textContent = `${ROLE_LABELS[role]} — Slot ${slot}`;
       modalSub.textContent = `${service_date} • ${shift_code}`;
-      nameInput.value = row?.full_name || '';
+      nameInput.value =
+        row?.full_name_snapshot ||
+        row?.full_name ||
+        row?.volunteer_name ||
+        '';
+
+      hideSuggestions();
       modalBackdrop.classList.add('open');
-      setTimeout(() => nameInput.focus(), 10);
+      setTimeout(() => {
+        nameInput.focus();
+        nameInput.select();
+      }, 10);
     }
 
     function closeEditor() {
       modalBackdrop.classList.remove('open');
       activeSlot = null;
+      nameInput.value = '';
+      hideSuggestions();
+    }
+
+    function hideSuggestions() {
+      filteredSuggestions = [];
+      highlightedSuggestionIndex = -1;
+      nameSuggestions.innerHTML = '';
+      nameSuggestions.classList.remove('open');
+    }
+
+    function showSuggestions(items) {
+      filteredSuggestions = items;
+      highlightedSuggestionIndex = -1;
+
+      if (!items.length) {
+        hideSuggestions();
+        return;
+      }
+
+      nameSuggestions.innerHTML = items
+        .map((name, index) => `
+          <div class="suggestion-item" data-index="${index}">
+            ${escapeHtml(name)}
+          </div>
+        `)
+        .join('');
+
+      nameSuggestions.classList.add('open');
+
+      Array.from(nameSuggestions.querySelectorAll('.suggestion-item')).forEach(item => {
+        item.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          const index = Number(item.dataset.index);
+          pickSuggestion(index);
+        });
+      });
+    }
+
+    function updateSuggestionHighlight() {
+      const items = nameSuggestions.querySelectorAll('.suggestion-item');
+      items.forEach((item, index) => {
+        item.classList.toggle('active', index === highlightedSuggestionIndex);
+      });
+    }
+
+    function pickSuggestion(index) {
+      if (index < 0 || index >= filteredSuggestions.length) return;
+      nameInput.value = filteredSuggestions[index];
+      hideSuggestions();
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    async function loadVolunteerNames() {
+      try {
+        const { data, error } = await client
+          .from(VOLUNTEER_TABLE)
+          .select('full_name')
+          .order('full_name', { ascending: true });
+
+        if (error) throw error;
+
+        volunteerNames = [...new Set(
+          (data || [])
+            .map(row => row.full_name)
+            .filter(Boolean)
+            .map(name => name.trim())
+            .filter(Boolean)
+        )];
+
+      } catch (err) {
+        console.error(err);
+        setStatus(`Volunteer names could not be loaded: ${err.message}`, true);
+      }
+    }
+
+    function getNameMatches(term) {
+      const q = term.trim().toLowerCase();
+      if (!q) return [];
+
+      const startsWith = [];
+      const contains = [];
+
+      for (const name of volunteerNames) {
+        const lower = name.toLowerCase();
+
+        if (lower.startsWith(q)) {
+          startsWith.push(name);
+        } else if (lower.includes(q)) {
+          contains.push(name);
+        }
+      }
+
+      return [...startsWith, ...contains].slice(0, 12);
     }
 
     async function loadAssignments() {
@@ -461,8 +642,8 @@
       }
 
       if (
-        SUPABASE_URL === 'YOUR_SUPABASE_URL' ||
-        SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY'
+        SUPABASE_URL === 'https://tfkdkekvtuqepjqsgjoc.supabase.co' ||
+        SUPABASE_ANON_KEY === 'sb_publishable_JRFxF6A8mDcZX2D05CdoCQ_F6_rDbwh'
       ) {
         setStatus('Add your Supabase URL and anon key in the script first.', true);
         return;
@@ -474,7 +655,17 @@
       try {
         const { data, error } = await client
           .from(READ_SOURCE)
-          .select('assignment_id,service_date,shift_code,shift_label,assignment_role,assignment_slot,full_name,status')
+          .select(`
+            assignment_id,
+            service_date,
+            shift_code,
+            shift_label,
+            assignment_role,
+            assignment_slot,
+            full_name,
+            full_name_snapshot,
+            status
+          `)
           .eq('service_date', service_date)
           .eq('shift_code', shift_code)
           .order('assignment_role', { ascending: true })
@@ -491,103 +682,170 @@
       }
     }
 
-async function saveAssignment() {
-  if (!activeSlot) return;
+    async function saveAssignment() {
+      if (!activeSlot) return;
 
-  const fullName = nameInput.value.trim();
-  const { service_date, shift_code } = getBoardContext();
+      const fullName = nameInput.value.trim();
+      const { service_date, shift_code } = getBoardContext();
 
-  if (!fullName) {
-    setStatus('Enter a name or use Remove.', true);
-    return;
-  }
+      if (!fullName) {
+        setStatus('Enter a name or use Remove.', true);
+        return;
+      }
 
-  setStatus('Saving...');
+      setStatus('Saving...');
 
-  try {
-    const { data: serviceDay, error: serviceDayError } = await client
-      .from('service_days')
-      .select('id')
-      .eq('service_date', service_date)
-      .single();
+      try {
+        const { data: serviceDay, error: serviceDayError } = await client
+          .from('service_days')
+          .select('id')
+          .eq('service_date', service_date)
+          .single();
 
-    if (serviceDayError) throw serviceDayError;
+        if (serviceDayError) throw serviceDayError;
 
-    const { data: shiftRow, error: shiftError } = await client
-      .from('shifts')
-      .select('id')
-      .eq('code', shift_code)
-      .single();
+        const { data: shiftRow, error: shiftError } = await client
+          .from('shifts')
+          .select('id')
+          .eq('code', shift_code)
+          .single();
 
-    if (shiftError) throw shiftError;
+        if (shiftError) throw shiftError;
 
-    const payload = {
-      service_day_id: serviceDay.id,
-      shift_id: shiftRow.id,
-      full_name_snapshot: fullName,
-      assignment_role: activeSlot.role,
-      assignment_slot: activeSlot.slot
-    };
+        const payload = {
+          service_day_id: serviceDay.id,
+          shift_id: shiftRow.id,
+          full_name_snapshot: fullName,
+          assignment_role: activeSlot.role,
+          assignment_slot: activeSlot.slot
+        };
 
-    const { error } = await client
-      .from(WRITE_TABLE)
-      .upsert(payload, {
-        onConflict: 'service_day_id,shift_id,assignment_role,assignment_slot'
-      });
+        const { error } = await client
+          .from(WRITE_TABLE)
+          .upsert(payload, {
+            onConflict: 'service_day_id,shift_id,assignment_role,assignment_slot'
+          });
 
-    if (error) throw error;
+        if (error) throw error;
 
-    closeEditor();
-    await loadAssignments();
-    setStatus(`Saved ${fullName}.`);
-  } catch (err) {
-    console.error(err);
-    setStatus(`Save failed: ${err.message}`, true);
-  }
-}
+        closeEditor();
+        await loadAssignments();
+        setStatus(`Saved ${fullName}.`);
+      } catch (err) {
+        console.error(err);
+        setStatus(`Save failed: ${err.message}`, true);
+      }
+    }
 
     async function removeAssignment() {
-  if (!activeSlot) return;
+      if (!activeSlot) return;
 
-  const { service_date, shift_code } = getBoardContext();
+      const { service_date, shift_code } = getBoardContext();
 
-  setStatus('Removing...');
+      setStatus('Removing...');
 
-  try {
-    const { data: serviceDay, error: serviceDayError } = await client
-      .from('service_days')
-      .select('id')
-      .eq('service_date', service_date)
-      .single();
+      try {
+        const { data: serviceDay, error: serviceDayError } = await client
+          .from('service_days')
+          .select('id')
+          .eq('service_date', service_date)
+          .single();
 
-    if (serviceDayError) throw serviceDayError;
+        if (serviceDayError) throw serviceDayError;
 
-    const { data: shiftRow, error: shiftError } = await client
-      .from('shifts')
-      .select('id')
-      .eq('code', shift_code)
-      .single();
+        const { data: shiftRow, error: shiftError } = await client
+          .from('shifts')
+          .select('id')
+          .eq('code', shift_code)
+          .single();
 
-    if (shiftError) throw shiftError;
+        if (shiftError) throw shiftError;
 
-    const { error } = await client
-      .from(WRITE_TABLE)
-      .delete()
-      .eq('service_day_id', serviceDay.id)
-      .eq('shift_id', shiftRow.id)
-      .eq('assignment_role', activeSlot.role)
-      .eq('assignment_slot', activeSlot.slot);
+        const { error } = await client
+          .from(WRITE_TABLE)
+          .delete()
+          .eq('service_day_id', serviceDay.id)
+          .eq('shift_id', shiftRow.id)
+          .eq('assignment_role', activeSlot.role)
+          .eq('assignment_slot', activeSlot.slot);
 
-    if (error) throw error;
+        if (error) throw error;
 
-    closeEditor();
-    await loadAssignments();
-    setStatus('Assignment removed.');
-  } catch (err) {
-    console.error(err);
-    setStatus(`Remove failed: ${err.message}`, true);
-  }
-}
+        closeEditor();
+        await loadAssignments();
+        setStatus('Assignment removed.');
+      } catch (err) {
+        console.error(err);
+        setStatus(`Remove failed: ${err.message}`, true);
+      }
+    }
+
+    nameInput.addEventListener('input', () => {
+      const matches = getNameMatches(nameInput.value);
+      showSuggestions(matches);
+    });
+
+    nameInput.addEventListener('keydown', (e) => {
+      if (!filteredSuggestions.length) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          saveAssignment();
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          closeEditor();
+        }
+        return;
+      }
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        highlightedSuggestionIndex =
+          highlightedSuggestionIndex < filteredSuggestions.length - 1
+            ? highlightedSuggestionIndex + 1
+            : 0;
+        updateSuggestionHighlight();
+        return;
+      }
+
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        highlightedSuggestionIndex =
+          highlightedSuggestionIndex > 0
+            ? highlightedSuggestionIndex - 1
+            : filteredSuggestions.length - 1;
+        updateSuggestionHighlight();
+        return;
+      }
+
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (highlightedSuggestionIndex >= 0) {
+          pickSuggestion(highlightedSuggestionIndex);
+        } else {
+          saveAssignment();
+        }
+        return;
+      }
+
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        if (filteredSuggestions.length) {
+          hideSuggestions();
+        } else {
+          closeEditor();
+        }
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      const clickedInsideInput = e.target === nameInput;
+      const clickedSuggestion = nameSuggestions.contains(e.target);
+
+      if (!clickedInsideInput && !clickedSuggestion) {
+        hideSuggestions();
+      }
+    });
+
     loadBtn.addEventListener('click', loadAssignments);
     saveBtn.addEventListener('click', saveAssignment);
     clearBtn.addEventListener('click', removeAssignment);
@@ -597,8 +855,16 @@ async function saveAssignment() {
       if (e.target === modalBackdrop) closeEditor();
     });
 
-    emptyBoard();
-    loadAssignments();
+    serviceDateEl.addEventListener('change', loadAssignments);
+    shiftCodeEl.addEventListener('change', loadAssignments);
+
+    async function init() {
+      emptyBoard();
+      await loadVolunteerNames();
+      await loadAssignments();
+    }
+
+    init();
   </script>
 </body>
 </html>
