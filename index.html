@@ -15,9 +15,7 @@
       --accent-soft: #eaf5ef;
       --danger: #a12626;
     }
-
     * { box-sizing: border-box; }
-
     body {
       margin: 0;
       padding: 20px;
@@ -25,12 +23,10 @@
       background: var(--bg);
       color: var(--text);
     }
-
     .wrap {
       max-width: 1200px;
       margin: 0 auto;
     }
-
     .panel {
       background: var(--card);
       border: 1px solid var(--line);
@@ -38,22 +34,18 @@
       box-shadow: 0 1px 4px rgba(0,0,0,.05);
       overflow: hidden;
     }
-
     .header {
       padding: 18px 20px 10px;
       border-bottom: 1px solid var(--line);
     }
-
     h1 {
       margin: 0 0 6px;
       font-size: 24px;
     }
-
     .sub {
       color: var(--muted);
       font-size: 14px;
     }
-
     .controls {
       display: grid;
       grid-template-columns: 1fr 180px 150px;
@@ -62,18 +54,15 @@
       border-bottom: 1px solid var(--line);
       align-items: end;
     }
-
     .field {
       position: relative;
     }
-
     .field label {
       display: block;
       font-size: 13px;
       color: var(--muted);
       margin-bottom: 6px;
     }
-
     .field input,
     .field select,
     .modal input,
@@ -85,7 +74,6 @@
       font-size: 14px;
       background: #fff;
     }
-
     .field input:focus,
     .field select:focus,
     .modal input:focus {
@@ -93,7 +81,6 @@
       border-color: #7aa58c;
       box-shadow: 0 0 0 3px rgba(45,106,79,.12);
     }
-
     button {
       background: var(--accent);
       color: #fff;
@@ -101,54 +88,45 @@
       border-color: var(--accent);
       font-weight: 600;
     }
-
     button:hover { filter: brightness(.96); }
-
     .btn-secondary {
       background: #fff;
       color: var(--text);
       border-color: #cfd5db;
     }
-
     .btn-danger {
       background: var(--danger);
       border-color: var(--danger);
       color: #fff;
     }
-
     .status {
       padding: 12px 20px 0;
       min-height: 32px;
       font-size: 14px;
       color: var(--muted);
     }
-
     .error {
       color: var(--danger);
       font-weight: 600;
     }
-
     .board-meta {
       padding: 6px 20px 16px;
       font-size: 15px;
       color: var(--text);
       font-weight: 600;
     }
-
     .grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 16px;
       padding: 0 20px 20px;
     }
-
     .column {
       border: 1px solid var(--line);
       border-radius: 14px;
       overflow: hidden;
       background: #fff;
     }
-
     .column h2 {
       margin: 0;
       padding: 12px 14px;
@@ -156,7 +134,6 @@
       background: var(--accent-soft);
       border-bottom: 1px solid var(--line);
     }
-
     .slot {
       display: grid;
       grid-template-columns: 36px 1fr;
@@ -167,13 +144,10 @@
       border-bottom: 1px solid var(--line);
       cursor: pointer;
     }
-
     .slot:hover {
       background: #fafcfa;
     }
-
     .slot:last-child { border-bottom: none; }
-
     .slot-num {
       width: 28px;
       height: 28px;
@@ -185,18 +159,15 @@
       font-size: 13px;
       font-weight: 700;
     }
-
     .slot-name.empty {
       color: #98a1aa;
       font-style: italic;
     }
-
     .helper {
       padding: 0 20px 18px;
       color: var(--muted);
       font-size: 13px;
     }
-
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -207,11 +178,9 @@
       padding: 20px;
       z-index: 1000;
     }
-
     .modal-backdrop.open {
       display: flex;
     }
-
     .modal {
       width: 100%;
       max-width: 460px;
@@ -222,35 +191,29 @@
       overflow: visible;
       position: relative;
     }
-
     .modal-header {
       padding: 16px 18px 10px;
       border-bottom: 1px solid var(--line);
     }
-
     .modal-title {
       font-size: 20px;
       font-weight: 700;
       margin: 0 0 4px;
     }
-
     .modal-sub {
       color: var(--muted);
       font-size: 13px;
     }
-
     .modal-body {
       padding: 16px 18px;
       overflow: visible;
     }
-
     .modal-actions {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
       gap: 10px;
       padding: 0 18px 18px;
     }
-
     .suggestions {
       display: none;
       position: absolute;
@@ -265,38 +228,31 @@
       z-index: 2000;
       box-shadow: 0 10px 20px rgba(0,0,0,.08);
     }
-
     .suggestions.open {
       display: block;
     }
-
     .suggestion-item {
       padding: 10px 12px;
       cursor: pointer;
       border-bottom: 1px solid #eef1f3;
       font-size: 14px;
     }
-
     .suggestion-item:last-child {
       border-bottom: none;
     }
-
     .suggestion-item:hover,
     .suggestion-item.active {
       background: var(--accent-soft);
     }
-
     .hint {
       margin-top: 8px;
       font-size: 12px;
       color: var(--muted);
     }
-
     @media (max-width: 900px) {
       .grid { grid-template-columns: 1fr 1fr; }
       .controls { grid-template-columns: 1fr 1fr; }
     }
-
     @media (max-width: 640px) {
       .grid,
       .controls,
@@ -313,13 +269,11 @@
         <h1>Orchard Assignments</h1>
         <div class="sub">Click any slot to add, change, or remove a name.</div>
       </div>
-
       <div class="controls">
         <div class="field">
           <label for="serviceDate">Service Date</label>
-          <input id="serviceDate" type="date" value="2026-04-15" />
+          <input id="serviceDate" type="date" />
         </div>
-
         <div class="field">
           <label for="shiftCode">Shift</label>
           <select id="shiftCode">
@@ -327,17 +281,14 @@
             <option value="AM">AM</option>
           </select>
         </div>
-
         <div class="field">
           <label>&nbsp;</label>
           <button id="loadBtn" type="button">Load Assignments</button>
         </div>
       </div>
-
       <div id="status" class="status"></div>
       <div id="boardMeta" class="board-meta"></div>
       <div class="helper">Tap or click a slot to edit it.</div>
-
       <div class="grid">
         <div class="column">
           <h2>Check In</h2>
@@ -365,7 +316,6 @@
         <div id="modalTitle" class="modal-title">Edit Assignment</div>
         <div id="modalSub" class="modal-sub"></div>
       </div>
-
       <div class="modal-body">
         <div class="field">
           <label for="nameInput">Volunteer Name</label>
@@ -379,7 +329,6 @@
           <div class="hint">Start typing and choose a matching volunteer name.</div>
         </div>
       </div>
-
       <div class="modal-actions">
         <button id="saveBtn" type="button">Save</button>
         <button id="clearBtn" type="button" class="btn-danger">Remove</button>
@@ -390,42 +339,39 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    const SUPABASE_URL = 'https://tfkdkekvtuqepjqsgjoc.supabase.co';
+    const SUPABASE_URL      = 'https://tfkdkekvtuqepjqsgjoc.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_JRFxF6A8mDcZX2D05CdoCQ_F6_rDbwh';
-
-    const READ_SOURCE = 'assignment_grid_rows';
-    const WRITE_TABLE = 'assignments';
-    const VOLUNTEER_TABLE = 'volunteers';
-
-    const ROLE_ORDER = ['check_in', 'parking', 'greeter', 'transport'];
-    const ROLE_LABELS = {
-      check_in: 'Check In',
-      parking: 'Parking',
-      greeter: 'Greeter',
+    const READ_SOURCE       = 'assignment_grid_rows';
+    const WRITE_TABLE       = 'assignments';
+    const VOLUNTEER_TABLE   = 'volunteers';
+    const ROLE_ORDER        = ['check_in', 'parking', 'greeter', 'transport'];
+    const ROLE_LABELS       = {
+      check_in:  'Check In',
+      parking:   'Parking',
+      greeter:   'Greeter',
       transport: 'Transport'
     };
 
     const roleContainers = {
-      check_in: document.getElementById('check_in'),
-      parking: document.getElementById('parking'),
-      greeter: document.getElementById('greeter'),
+      check_in:  document.getElementById('check_in'),
+      parking:   document.getElementById('parking'),
+      greeter:   document.getElementById('greeter'),
       transport: document.getElementById('transport')
     };
 
-    const statusEl = document.getElementById('status');
-    const boardMetaEl = document.getElementById('boardMeta');
-    const serviceDateEl = document.getElementById('serviceDate');
-    const shiftCodeEl = document.getElementById('shiftCode');
-    const loadBtn = document.getElementById('loadBtn');
-
-    const modalBackdrop = document.getElementById('modalBackdrop');
-    const modalTitle = document.getElementById('modalTitle');
-    const modalSub = document.getElementById('modalSub');
-    const nameInput = document.getElementById('nameInput');
+    const statusEl       = document.getElementById('status');
+    const boardMetaEl    = document.getElementById('boardMeta');
+    const serviceDateEl  = document.getElementById('serviceDate');
+    const shiftCodeEl    = document.getElementById('shiftCode');
+    const loadBtn        = document.getElementById('loadBtn');
+    const modalBackdrop  = document.getElementById('modalBackdrop');
+    const modalTitle     = document.getElementById('modalTitle');
+    const modalSub       = document.getElementById('modalSub');
+    const nameInput      = document.getElementById('nameInput');
     const nameSuggestions = document.getElementById('nameSuggestions');
-    const saveBtn = document.getElementById('saveBtn');
-    const clearBtn = document.getElementById('clearBtn');
-    const cancelBtn = document.getElementById('cancelBtn');
+    const saveBtn        = document.getElementById('saveBtn');
+    const clearBtn       = document.getElementById('clearBtn');
+    const cancelBtn      = document.getElementById('cancelBtn');
 
     const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -434,6 +380,23 @@
     let filteredSuggestions = [];
     let highlightedSuggestionIndex = -1;
 
+    // ── Next Wednesday ──────────────────────────────────────────
+    function nextWednesday() {
+      const today = new Date();
+      const day   = today.getDay();                        // 0=Sun … 6=Sat
+      const daysUntilWed = day === 3 ? 7 : (3 - day + 7) % 7;
+      const next  = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate() + daysUntilWed
+      );
+      const y = next.getFullYear();
+      const m = String(next.getMonth() + 1).padStart(2, '0');
+      const d = String(next.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    // ── Utilities ───────────────────────────────────────────────
     function setStatus(message, isError = false) {
       statusEl.textContent = message;
       statusEl.className = isError ? 'status error' : 'status';
@@ -442,19 +405,20 @@
     function getBoardContext() {
       return {
         service_date: serviceDateEl.value,
-        shift_code: shiftCodeEl.value
+        shift_code:   shiftCodeEl.value
       };
     }
 
     function escapeHtml(value) {
       return String(value)
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
+        .replaceAll('&',  '&amp;')
+        .replaceAll('<',  '&lt;')
+        .replaceAll('>',  '&gt;')
+        .replaceAll('"',  '&quot;')
         .replaceAll("'", '&#039;');
     }
 
+    // ── Board rendering ─────────────────────────────────────────
     function emptyBoard() {
       ROLE_ORDER.forEach(role => {
         roleContainers[role].innerHTML = '';
@@ -465,96 +429,76 @@
     }
 
     function buildSlotElement(role, slot, row) {
-      const rowEl = document.createElement('div');
+      const rowEl  = document.createElement('div');
       rowEl.className = 'slot';
-
-      const name = row?.full_name || 'Open';
+      const name    = row?.full_name || 'Open';
       const isEmpty = !row;
-
       rowEl.innerHTML = `
         <div class="slot-num">${slot}</div>
         <div class="slot-name ${isEmpty ? 'empty' : ''}">${escapeHtml(name)}</div>
       `;
-
       rowEl.addEventListener('click', () => openEditor(role, slot, row));
       return rowEl;
     }
 
     function renderBoard(rows, serviceDate, shiftCode) {
       const byRoleAndSlot = new Map();
-
       (rows || []).forEach(row => {
         byRoleAndSlot.set(`${row.assignment_role}:${row.assignment_slot}`, row);
       });
-
       ROLE_ORDER.forEach(role => {
         const container = roleContainers[role];
         container.innerHTML = '';
-
         for (let slot = 1; slot <= 8; slot += 1) {
-          const key = `${role}:${slot}`;
+          const key   = `${role}:${slot}`;
           const match = byRoleAndSlot.get(key) || null;
           container.appendChild(buildSlotElement(role, slot, match));
         }
       });
-
       boardMetaEl.textContent = `${serviceDate} • ${shiftCode}`;
     }
 
+    // ── Modal ───────────────────────────────────────────────────
     function openEditor(role, slot, row) {
       const { service_date, shift_code } = getBoardContext();
-
       if (!service_date) {
         setStatus('Choose a service date first.', true);
         return;
       }
-
-      activeSlot = { role, slot, row };
-
+      activeSlot  = { role, slot, row };
       modalTitle.textContent = `${ROLE_LABELS[role]} — Slot ${slot}`;
-      modalSub.textContent = `${service_date} • ${shift_code}`;
-      nameInput.value = row?.full_name || '';
-
+      modalSub.textContent   = `${service_date} • ${shift_code}`;
+      nameInput.value        = row?.full_name || '';
       hideSuggestions();
       modalBackdrop.classList.add('open');
-
-      setTimeout(() => {
-        nameInput.focus();
-        nameInput.select();
-      }, 10);
+      setTimeout(() => { nameInput.focus(); nameInput.select(); }, 10);
     }
 
     function closeEditor() {
       modalBackdrop.classList.remove('open');
-      activeSlot = null;
+      activeSlot  = null;
       nameInput.value = '';
       hideSuggestions();
     }
 
+    // ── Suggestions ─────────────────────────────────────────────
     function hideSuggestions() {
-      filteredSuggestions = [];
+      filteredSuggestions        = [];
       highlightedSuggestionIndex = -1;
-      nameSuggestions.innerHTML = '';
+      nameSuggestions.innerHTML  = '';
       nameSuggestions.classList.remove('open');
     }
 
     function showSuggestions(items) {
-      filteredSuggestions = items;
+      filteredSuggestions        = items;
       highlightedSuggestionIndex = -1;
-
-      if (!items.length) {
-        hideSuggestions();
-        return;
-      }
-
+      if (!items.length) { hideSuggestions(); return; }
       nameSuggestions.innerHTML = items.map((name, index) => `
         <div class="suggestion-item" data-index="${index}">
           ${escapeHtml(name)}
         </div>
       `).join('');
-
       nameSuggestions.classList.add('open');
-
       Array.from(nameSuggestions.querySelectorAll('.suggestion-item')).forEach(item => {
         item.addEventListener('mousedown', (e) => {
           e.preventDefault();
@@ -579,31 +523,24 @@
     function getNameMatches(term) {
       const q = term.trim().toLowerCase();
       if (!q) return [];
-
       const startsWith = [];
-      const contains = [];
-
+      const contains   = [];
       for (const name of volunteerNames) {
         const lower = name.toLowerCase();
-        if (lower.startsWith(q)) {
-          startsWith.push(name);
-        } else if (lower.includes(q)) {
-          contains.push(name);
-        }
+        if (lower.startsWith(q))      { startsWith.push(name); }
+        else if (lower.includes(q))   { contains.push(name); }
       }
-
       return [...startsWith, ...contains].slice(0, 12);
     }
 
+    // ── Data loading ────────────────────────────────────────────
     async function loadVolunteerNames() {
       try {
         const { data, error } = await client
           .from(VOLUNTEER_TABLE)
           .select('full_name')
           .order('full_name', { ascending: true });
-
         if (error) throw error;
-
         volunteerNames = [...new Set(
           (data || [])
             .map(row => row.full_name)
@@ -619,15 +556,12 @@
 
     async function loadAssignments() {
       const { service_date, shift_code } = getBoardContext();
-
       if (!service_date) {
         setStatus('Choose a service date first.', true);
         return;
       }
-
       setStatus('Loading...');
       boardMetaEl.textContent = '';
-
       try {
         const { data, error } = await client
           .from(READ_SOURCE)
@@ -644,12 +578,10 @@
             status
           `)
           .eq('service_date', service_date)
-          .eq('shift_code', shift_code)
+          .eq('shift_code',   shift_code)
           .order('assignment_role', { ascending: true })
           .order('assignment_slot', { ascending: true });
-
         if (error) throw error;
-
         renderBoard(data || [], service_date, shift_code);
         setStatus(`${(data || []).length} assignment row(s) loaded.`);
       } catch (err) {
@@ -659,26 +591,22 @@
       }
     }
 
+    // ── Save / Remove ───────────────────────────────────────────
     async function saveAssignment() {
       if (!activeSlot) return;
-
       const fullName = nameInput.value.trim();
       const { service_date, shift_code } = getBoardContext();
-
       if (!fullName) {
         setStatus('Enter a name or use Remove.', true);
         return;
       }
-
       setStatus('Saving...');
-
       try {
         const { data: serviceDay, error: serviceDayError } = await client
           .from('service_days')
           .select('id')
           .eq('service_date', service_date)
           .single();
-
         if (serviceDayError) throw serviceDayError;
 
         const { data: shiftRow, error: shiftError } = await client
@@ -686,7 +614,6 @@
           .select('id')
           .eq('code', shift_code)
           .single();
-
         if (shiftError) throw shiftError;
 
         const { data: volunteerRow } = await client
@@ -696,12 +623,12 @@
           .maybeSingle();
 
         const payload = {
-          service_day_id: serviceDay.id,
-          shift_id: shiftRow.id,
-          volunteer_id: volunteerRow?.id || null,
+          service_day_id:     serviceDay.id,
+          shift_id:           shiftRow.id,
+          volunteer_id:       volunteerRow?.id || null,
           full_name_snapshot: fullName,
-          assignment_role: activeSlot.role,
-          assignment_slot: activeSlot.slot
+          assignment_role:    activeSlot.role,
+          assignment_slot:    activeSlot.slot
         };
 
         const { error } = await client
@@ -709,7 +636,6 @@
           .upsert(payload, {
             onConflict: 'service_day_id,shift_id,assignment_role,assignment_slot'
           });
-
         if (error) throw error;
 
         closeEditor();
@@ -723,18 +649,14 @@
 
     async function removeAssignment() {
       if (!activeSlot) return;
-
       const { service_date, shift_code } = getBoardContext();
-
       setStatus('Removing...');
-
       try {
         const { data: serviceDay, error: serviceDayError } = await client
           .from('service_days')
           .select('id')
           .eq('service_date', service_date)
           .single();
-
         if (serviceDayError) throw serviceDayError;
 
         const { data: shiftRow, error: shiftError } = await client
@@ -742,17 +664,15 @@
           .select('id')
           .eq('code', shift_code)
           .single();
-
         if (shiftError) throw shiftError;
 
         const { error } = await client
           .from(WRITE_TABLE)
           .delete()
-          .eq('service_day_id', serviceDay.id)
-          .eq('shift_id', shiftRow.id)
-          .eq('assignment_role', activeSlot.role)
-          .eq('assignment_slot', activeSlot.slot);
-
+          .eq('service_day_id',   serviceDay.id)
+          .eq('shift_id',         shiftRow.id)
+          .eq('assignment_role',  activeSlot.role)
+          .eq('assignment_slot',  activeSlot.slot);
         if (error) throw error;
 
         closeEditor();
@@ -764,42 +684,33 @@
       }
     }
 
+    // ── Event wiring ────────────────────────────────────────────
     nameInput.addEventListener('input', () => {
       showSuggestions(getNameMatches(nameInput.value));
     });
 
     nameInput.addEventListener('keydown', (e) => {
       if (!filteredSuggestions.length) {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          saveAssignment();
-        } else if (e.key === 'Escape') {
-          e.preventDefault();
-          closeEditor();
-        }
+        if (e.key === 'Enter')  { e.preventDefault(); saveAssignment(); }
+        if (e.key === 'Escape') { e.preventDefault(); closeEditor(); }
         return;
       }
-
       if (e.key === 'ArrowDown') {
         e.preventDefault();
         highlightedSuggestionIndex =
           highlightedSuggestionIndex < filteredSuggestions.length - 1
-            ? highlightedSuggestionIndex + 1
-            : 0;
+            ? highlightedSuggestionIndex + 1 : 0;
         updateSuggestionHighlight();
         return;
       }
-
       if (e.key === 'ArrowUp') {
         e.preventDefault();
         highlightedSuggestionIndex =
           highlightedSuggestionIndex > 0
-            ? highlightedSuggestionIndex - 1
-            : filteredSuggestions.length - 1;
+            ? highlightedSuggestionIndex - 1 : filteredSuggestions.length - 1;
         updateSuggestionHighlight();
         return;
       }
-
       if (e.key === 'Enter') {
         e.preventDefault();
         if (highlightedSuggestionIndex >= 0) {
@@ -809,39 +720,31 @@
         }
         return;
       }
-
       if (e.key === 'Escape') {
         e.preventDefault();
-        if (filteredSuggestions.length) {
-          hideSuggestions();
-        } else {
-          closeEditor();
-        }
+        if (filteredSuggestions.length) { hideSuggestions(); } else { closeEditor(); }
       }
     });
 
     document.addEventListener('click', (e) => {
       const clickedInsideInput = e.target === nameInput;
-      const clickedSuggestion = nameSuggestions.contains(e.target);
-
-      if (!clickedInsideInput && !clickedSuggestion) {
-        hideSuggestions();
-      }
+      const clickedSuggestion  = nameSuggestions.contains(e.target);
+      if (!clickedInsideInput && !clickedSuggestion) { hideSuggestions(); }
     });
 
     loadBtn.addEventListener('click', loadAssignments);
     saveBtn.addEventListener('click', saveAssignment);
     clearBtn.addEventListener('click', removeAssignment);
     cancelBtn.addEventListener('click', closeEditor);
-
     modalBackdrop.addEventListener('click', (e) => {
       if (e.target === modalBackdrop) closeEditor();
     });
-
     serviceDateEl.addEventListener('change', loadAssignments);
-    shiftCodeEl.addEventListener('change', loadAssignments);
+    shiftCodeEl.addEventListener('change',   loadAssignments);
 
+    // ── Init ────────────────────────────────────────────────────
     async function init() {
+      serviceDateEl.value = nextWednesday();   // ← auto-set to next Wednesday
       emptyBoard();
       await loadVolunteerNames();
       await loadAssignments();
