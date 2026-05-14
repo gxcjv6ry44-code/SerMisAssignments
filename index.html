@@ -384,7 +384,7 @@
     function nextWednesday() {
       const today = new Date();
       const day   = today.getDay();                        // 0=Sun … 6=Sat
-      const daysUntilWed = day === 3 ? 7 : (3 - day + 7) % 7;
+      const daysUntilWed = day === 3 ? 0 : (3 - day + 7) % 7;
       const next  = new Date(
         today.getFullYear(),
         today.getMonth(),
