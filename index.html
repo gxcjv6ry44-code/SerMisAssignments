@@ -37,6 +37,11 @@
     .header {
       padding: 18px 20px 10px;
       border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
     }
     h1 {
       margin: 0 0 6px;
@@ -66,6 +71,7 @@
     .field input,
     .field select,
     .modal input,
+    .modal select,
     button {
       width: 100%;
       padding: 10px 12px;
@@ -76,7 +82,8 @@
     }
     .field input:focus,
     .field select:focus,
-    .modal input:focus {
+    .modal input:focus,
+    .modal select:focus {
       outline: none;
       border-color: #7aa58c;
       box-shadow: 0 0 0 3px rgba(45,106,79,.12);
@@ -99,6 +106,19 @@
       border-color: var(--danger);
       color: #fff;
     }
+    .btn-manage {
+      background: #fff;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      width: auto;
+    }
+    .btn-manage:hover { background: var(--accent-soft); filter: none; }
     .status {
       padding: 12px 20px 0;
       min-height: 32px;
@@ -214,6 +234,9 @@
       gap: 10px;
       padding: 0 18px 18px;
     }
+    .modal-actions.two-col {
+      grid-template-columns: 1fr 1fr;
+    }
     .suggestions {
       display: none;
       position: absolute;
@@ -249,6 +272,51 @@
       font-size: 12px;
       color: var(--muted);
     }
+    /* Dates modal */
+    .mode-toggle {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .mode-btn {
+      font-weight: 600;
+      font-size: 13px;
+      padding: 9px 12px;
+    }
+    .mode-btn.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    .mode-btn:not(.active) {
+      background: #fff;
+      color: var(--text);
+      border-color: #cfd5db;
+    }
+    .dates-field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .dates-preview {
+      margin-top: 10px;
+      padding: 10px 12px;
+      background: var(--accent-soft);
+      border-radius: 8px;
+      font-size: 13px;
+      color: var(--accent);
+      display: none;
+    }
+    .dates-preview.visible { display: block; }
+    .dates-status {
+      min-height: 22px;
+      margin-top: 10px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .dates-status.success { color: var(--accent); font-weight: 600; }
+    .dates-status.err     { color: var(--danger); font-weight: 600; }
     @media (max-width: 900px) {
       .grid { grid-template-columns: 1fr 1fr; }
       .controls { grid-template-columns: 1fr 1fr; }
@@ -266,8 +334,11 @@
   <div class="wrap">
     <div class="panel">
       <div class="header">
-        <h1>Orchard Assignments</h1>
-        <div class="sub">Click any slot to add, change, or remove a name.</div>
+        <div>
+          <h1>Orchard Assignments</h1>
+          <div class="sub">Click any slot to add, change, or remove a name.</div>
+        </div>
+        <button id="manageDatesBtn" type="button" class="btn-manage">⚙ Manage Dates</button>
       </div>
       <div class="controls">
         <div class="field">
@@ -310,6 +381,7 @@
     </div>
   </div>
 
+  <!-- Assignment edit modal -->
   <div id="modalBackdrop" class="modal-backdrop">
     <div class="modal">
       <div class="modal-header">
@@ -337,6 +409,74 @@
     </div>
   </div>
 
+  <!-- Manage Dates modal -->
+  <div id="datesModalBackdrop" class="modal-backdrop">
+    <div class="modal" style="max-width:500px;">
+      <div class="modal-header">
+        <div class="modal-title">Manage Service Dates</div>
+        <div class="modal-sub">Add dates to the schedule so volunteers can sign up.</div>
+      </div>
+      <div class="modal-body">
+        <!-- Mode toggle -->
+        <div class="mode-toggle">
+          <button type="button" id="modeSingleBtn" class="mode-btn active">Single Date</button>
+          <button type="button" id="modeRecurBtn"  class="mode-btn">Recurring</button>
+        </div>
+
+        <!-- Single date mode -->
+        <div id="singleMode">
+          <div class="field">
+            <label for="singleDateInput">Date</label>
+            <input type="date" id="singleDateInput" />
+          </div>
+        </div>
+
+        <!-- Recurring mode -->
+        <div id="recurMode" style="display:none;">
+          <div class="dates-field-row">
+            <div class="field">
+              <label for="recurStartInput">Start Date</label>
+              <input type="date" id="recurStartInput" />
+            </div>
+            <div class="field">
+              <label for="recurEndInput">End Date</label>
+              <input type="date" id="recurEndInput" />
+            </div>
+          </div>
+          <div class="field" style="margin-top:12px;">
+            <label for="recurDayInput">Day of Week</label>
+            <select id="recurDayInput">
+              <option value="0">Sunday</option>
+              <option value="1">Monday</option>
+              <option value="2">Tuesday</option>
+              <option value="3" selected>Wednesday</option>
+              <option value="4">Thursday</option>
+              <option value="5">Friday</option>
+              <option value="6">Saturday</option>
+            </select>
+          </div>
+          <div id="datesPreview" class="dates-preview"></div>
+        </div>
+
+        <!-- Season (shared) -->
+        <div class="field" style="margin-top:14px;">
+          <label for="seasonInput">Season</label>
+          <select id="seasonInput">
+            <option value="Assignments">Assignments</option>
+            <option value="Thinning">Thinning</option>
+            <option value="Harvest">Harvest</option>
+          </select>
+        </div>
+
+        <div id="datesStatus" class="dates-status"></div>
+      </div>
+      <div class="modal-actions two-col">
+        <button id="addDatesBtn" type="button">Add Date(s)</button>
+        <button id="cancelDatesBtn" type="button" class="btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const SUPABASE_URL      = 'https://tfkdkekvtuqepjqsgjoc.supabase.co';
@@ -344,6 +484,7 @@
     const READ_SOURCE       = 'assignment_grid_rows';
     const WRITE_TABLE       = 'assignments';
     const VOLUNTEER_TABLE   = 'volunteers';
+    const SERVICE_DAYS      = 'service_days';
     const ROLE_ORDER        = ['check_in', 'parking', 'greeter', 'transport'];
     const ROLE_LABELS       = {
       check_in:  'Check In',
@@ -351,6 +492,7 @@
       greeter:   'Greeter',
       transport: 'Transport'
     };
+    const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 
     const roleContainers = {
       check_in:  document.getElementById('check_in'),
@@ -359,19 +501,36 @@
       transport: document.getElementById('transport')
     };
 
-    const statusEl       = document.getElementById('status');
-    const boardMetaEl    = document.getElementById('boardMeta');
-    const serviceDateEl  = document.getElementById('serviceDate');
-    const shiftCodeEl    = document.getElementById('shiftCode');
-    const loadBtn        = document.getElementById('loadBtn');
-    const modalBackdrop  = document.getElementById('modalBackdrop');
-    const modalTitle     = document.getElementById('modalTitle');
-    const modalSub       = document.getElementById('modalSub');
-    const nameInput      = document.getElementById('nameInput');
+    const statusEl        = document.getElementById('status');
+    const boardMetaEl     = document.getElementById('boardMeta');
+    const serviceDateEl   = document.getElementById('serviceDate');
+    const shiftCodeEl     = document.getElementById('shiftCode');
+    const loadBtn         = document.getElementById('loadBtn');
+    const modalBackdrop   = document.getElementById('modalBackdrop');
+    const modalTitle      = document.getElementById('modalTitle');
+    const modalSub        = document.getElementById('modalSub');
+    const nameInput       = document.getElementById('nameInput');
     const nameSuggestions = document.getElementById('nameSuggestions');
-    const saveBtn        = document.getElementById('saveBtn');
-    const clearBtn       = document.getElementById('clearBtn');
-    const cancelBtn      = document.getElementById('cancelBtn');
+    const saveBtn         = document.getElementById('saveBtn');
+    const clearBtn        = document.getElementById('clearBtn');
+    const cancelBtn       = document.getElementById('cancelBtn');
+
+    // Dates modal elements
+    const manageDatesBtn      = document.getElementById('manageDatesBtn');
+    const datesModalBackdrop  = document.getElementById('datesModalBackdrop');
+    const modeSingleBtn       = document.getElementById('modeSingleBtn');
+    const modeRecurBtn        = document.getElementById('modeRecurBtn');
+    const singleMode          = document.getElementById('singleMode');
+    const recurMode           = document.getElementById('recurMode');
+    const singleDateInput     = document.getElementById('singleDateInput');
+    const recurStartInput     = document.getElementById('recurStartInput');
+    const recurEndInput       = document.getElementById('recurEndInput');
+    const recurDayInput       = document.getElementById('recurDayInput');
+    const seasonInput         = document.getElementById('seasonInput');
+    const datesPreview        = document.getElementById('datesPreview');
+    const datesStatus         = document.getElementById('datesStatus');
+    const addDatesBtn         = document.getElementById('addDatesBtn');
+    const cancelDatesBtn      = document.getElementById('cancelDatesBtn');
 
     const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -379,20 +538,25 @@
     let volunteerNames = [];
     let filteredSuggestions = [];
     let highlightedSuggestionIndex = -1;
+    let datesModalMode = 'single';
 
     // ── Next Wednesday ──────────────────────────────────────────
     function nextWednesday() {
       const today = new Date();
-      const day   = today.getDay();                        // 0=Sun … 6=Sat
+      const day   = today.getDay();
       const daysUntilWed = day === 3 ? 0 : (3 - day + 7) % 7;
       const next  = new Date(
         today.getFullYear(),
         today.getMonth(),
         today.getDate() + daysUntilWed
       );
-      const y = next.getFullYear();
-      const m = String(next.getMonth() + 1).padStart(2, '0');
-      const d = String(next.getDate()).padStart(2, '0');
+      return toDateStr(next);
+    }
+
+    function toDateStr(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
       return `${y}-${m}-${d}`;
     }
 
@@ -458,7 +622,7 @@
       boardMetaEl.textContent = `${serviceDate} • ${shiftCode}`;
     }
 
-    // ── Modal ───────────────────────────────────────────────────
+    // ── Assignment edit modal ───────────────────────────────────
     function openEditor(role, slot, row) {
       const { service_date, shift_code } = getBoardContext();
       if (!service_date) {
@@ -591,6 +755,36 @@
       }
     }
 
+    // ── Get or create service day ────────────────────────────────
+    async function getOrCreateServiceDay(service_date) {
+      // Try to find existing row
+      const { data: existing, error: findError } = await client
+        .from(SERVICE_DAYS)
+        .select('id')
+        .eq('service_date', service_date)
+        .maybeSingle();
+      if (findError) throw findError;
+      if (existing) return existing;
+
+      // Not found — create it automatically
+      const date    = new Date(service_date + 'T12:00:00');
+      const dayName = DAY_NAMES[date.getDay()];
+      const { data: created, error: insertError } = await client
+        .from(SERVICE_DAYS)
+        .insert({
+          service_date,
+          day_name:  dayName,
+          open:      true,
+          am_open:   true,
+          pm_open:   true,
+          season:    'Assignments'
+        })
+        .select('id')
+        .single();
+      if (insertError) throw insertError;
+      return created;
+    }
+
     // ── Save / Remove ───────────────────────────────────────────
     async function saveAssignment() {
       if (!activeSlot) return;
@@ -602,12 +796,7 @@
       }
       setStatus('Saving...');
       try {
-        const { data: serviceDay, error: serviceDayError } = await client
-          .from('service_days')
-          .select('id')
-          .eq('service_date', service_date)
-          .single();
-        if (serviceDayError) throw serviceDayError;
+        const serviceDay = await getOrCreateServiceDay(service_date);
 
         const { data: shiftRow, error: shiftError } = await client
           .from('shifts')
@@ -653,11 +842,12 @@
       setStatus('Removing...');
       try {
         const { data: serviceDay, error: serviceDayError } = await client
-          .from('service_days')
+          .from(SERVICE_DAYS)
           .select('id')
           .eq('service_date', service_date)
-          .single();
+          .maybeSingle();
         if (serviceDayError) throw serviceDayError;
+        if (!serviceDay) { closeEditor(); setStatus('Nothing to remove.'); return; }
 
         const { data: shiftRow, error: shiftError } = await client
           .from('shifts')
@@ -681,6 +871,126 @@
       } catch (err) {
         console.error(err);
         setStatus(`Remove failed: ${err.message}`, true);
+      }
+    }
+
+    // ── Manage Dates modal ───────────────────────────────────────
+    function openDatesModal() {
+      singleDateInput.value = serviceDateEl.value || nextWednesday();
+      recurStartInput.value = nextWednesday();
+      recurEndInput.value   = '';
+      datesStatus.textContent = '';
+      datesStatus.className   = 'dates-status';
+      datesPreview.textContent = '';
+      datesPreview.classList.remove('visible');
+      datesModalBackdrop.classList.add('open');
+    }
+
+    function closeDatesModal() {
+      datesModalBackdrop.classList.remove('open');
+    }
+
+    function setDatesMode(mode) {
+      datesModalMode = mode;
+      if (mode === 'single') {
+        singleMode.style.display = '';
+        recurMode.style.display  = 'none';
+        modeSingleBtn.classList.add('active');
+        modeRecurBtn.classList.remove('active');
+      } else {
+        singleMode.style.display = 'none';
+        recurMode.style.display  = '';
+        modeSingleBtn.classList.remove('active');
+        modeRecurBtn.classList.add('active');
+        updateDatesPreview();
+      }
+    }
+
+    function getRecurringDates(startStr, endStr, dayOfWeek) {
+      if (!startStr || !endStr) return [];
+      const start = new Date(startStr + 'T12:00:00');
+      const end   = new Date(endStr   + 'T12:00:00');
+      if (end < start) return [];
+      const dow  = parseInt(dayOfWeek, 10);
+      const dates = [];
+      const cur  = new Date(start);
+      while (cur.getDay() !== dow) cur.setDate(cur.getDate() + 1);
+      while (cur <= end) {
+        dates.push(toDateStr(cur));
+        cur.setDate(cur.getDate() + 7);
+      }
+      return dates;
+    }
+
+    function updateDatesPreview() {
+      if (datesModalMode !== 'recur') return;
+      const dates = getRecurringDates(recurStartInput.value, recurEndInput.value, recurDayInput.value);
+      if (!dates.length) {
+        datesPreview.textContent = 'No dates in range yet.';
+        datesPreview.classList.add('visible');
+      } else {
+        datesPreview.textContent = `Will add ${dates.length} date(s): ${dates.join(', ')}`;
+        datesPreview.classList.add('visible');
+      }
+    }
+
+    function setDatesStatus(msg, type = '') {
+      datesStatus.textContent = msg;
+      datesStatus.className   = 'dates-status' + (type ? ` ${type}` : '');
+    }
+
+    async function addDates() {
+      const season = seasonInput.value;
+      let datesToAdd = [];
+
+      if (datesModalMode === 'single') {
+        if (!singleDateInput.value) {
+          setDatesStatus('Choose a date.', 'err');
+          return;
+        }
+        datesToAdd = [singleDateInput.value];
+      } else {
+        datesToAdd = getRecurringDates(recurStartInput.value, recurEndInput.value, recurDayInput.value);
+        if (!datesToAdd.length) {
+          setDatesStatus('No dates in range. Check start/end dates.', 'err');
+          return;
+        }
+      }
+
+      setDatesStatus(`Adding ${datesToAdd.length} date(s)…`);
+      addDatesBtn.disabled = true;
+
+      try {
+        const rows = datesToAdd.map(dateStr => {
+          const date = new Date(dateStr + 'T12:00:00');
+          return {
+            service_date: dateStr,
+            day_name:     DAY_NAMES[date.getDay()],
+            open:         true,
+            am_open:      true,
+            pm_open:      true,
+            season
+          };
+        });
+
+        const { error } = await client
+          .from(SERVICE_DAYS)
+          .upsert(rows, { onConflict: 'service_date' });
+        if (error) throw error;
+
+        setDatesStatus(`✓ ${datesToAdd.length} date(s) added successfully.`, 'success');
+
+        // Reload assignments if the current date was among those added
+        if (datesToAdd.includes(serviceDateEl.value)) {
+          await loadAssignments();
+        }
+
+        setTimeout(closeDatesModal, 1500);
+      } catch (err) {
+        console.error(err);
+        setDatesStatus(`Error: ${err.message}`, 'err');
+      } finally {
+        addDatesBtn.disabled = false;
       }
     }
 
@@ -742,9 +1052,22 @@
     serviceDateEl.addEventListener('change', loadAssignments);
     shiftCodeEl.addEventListener('change',   loadAssignments);
 
+    // Dates modal
+    manageDatesBtn.addEventListener('click', openDatesModal);
+    modeSingleBtn.addEventListener('click',  () => setDatesMode('single'));
+    modeRecurBtn.addEventListener('click',   () => setDatesMode('recur'));
+    [recurStartInput, recurEndInput, recurDayInput].forEach(el =>
+      el.addEventListener('change', updateDatesPreview)
+    );
+    addDatesBtn.addEventListener('click',    addDates);
+    cancelDatesBtn.addEventListener('click', closeDatesModal);
+    datesModalBackdrop.addEventListener('click', (e) => {
+      if (e.target === datesModalBackdrop) closeDatesModal();
+    });
+
     // ── Init ────────────────────────────────────────────────────
     async function init() {
-      serviceDateEl.value = nextWednesday();   // ← auto-set to next Wednesday
+      serviceDateEl.value = nextWednesday();
       emptyBoard();
       await loadVolunteerNames();
       await loadAssignments();
